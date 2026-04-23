@@ -286,8 +286,10 @@ function configureContentOnlyEditor(editor) {
   panel.removeButton("views", "open-tm");
 
   editor.StyleManager.getSectors().reset([]);
-  editor.Commands.remove("core:open-style-manager");
-  editor.Commands.remove("core:open-trait-manager");
+  if (typeof editor.Commands?.remove === "function") {
+    editor.Commands.remove("core:open-style-manager");
+    editor.Commands.remove("core:open-trait-manager");
+  }
 }
 
 function destroyEditor() {

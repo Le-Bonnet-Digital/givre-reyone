@@ -4,3 +4,5 @@ dist/
 .vercel
 .env.local
 .cursor-backup-*/
+playwright-report/
+test-results/

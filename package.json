@@ -6,7 +6,13 @@
     "dev": "vite",
     "dev:vercel": "npx dotenv -e .env.local -- npx vercel dev",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test:e2e": "playwright test",
+    "test:e2e:smoke": "playwright test tests/e2e/smoke.spec.ts tests/e2e/ux-ui-guards.spec.ts",
+    "test:e2e:builder": "playwright test tests/e2e/builder.spec.ts",
+    "test:e2e:visual": "playwright test tests/e2e/visual-regression.spec.ts",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:update": "playwright test --update-snapshots"
   },
   "dependencies": {
     "@vercel/blob": "^2.3.3",
@@ -15,6 +21,8 @@
     "grapesjs-preset-webpage": "^1.0.3"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.11.2",
+    "@playwright/test": "^1.59.1",
     "dotenv-cli": "^11.0.0",
     "vite": "^8.0.10"
   }

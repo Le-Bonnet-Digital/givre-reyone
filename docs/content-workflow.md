@@ -65,6 +65,7 @@ Procédure :
 ## Checklist pré-deploy
 
 - [ ] Build passe.
+- [ ] `npm run test:e2e` passe.
 - [ ] Pas d'écart connu Builder/Public sur les pages impactées.
 - [ ] Risques de divergence documentés si convergence partielle.
 - [ ] L'état déployé devient la nouvelle référence opérationnelle.
@@ -96,3 +97,27 @@ flowchart LR
   deployStep --> convergence
   convergence --> nextCycle[NextEditStartsHere]
 ```
+
+## Validation UX/UI automatisée
+
+La suite Playwright vérifie la navigation, des captures d'écran desktop/mobile et des garde-fous UX.
+
+Commandes :
+
+- `npm run test:e2e` : smoke + builder + visual regression + checks UX/UI.
+- `npm run test:e2e:smoke` : navigation et garde-fous.
+- `npm run test:e2e:builder` : options builder, changement de page, rendu attendu.
+- `npm run test:e2e:visual` : snapshots visuels stables.
+- `npm run test:e2e:ui` : exécution interactive locale.
+- `npm run test:e2e:update` : à utiliser uniquement pour valider un changement visuel attendu.
+
+Prérequis pour `test:e2e:builder` :
+
+- exporter `ADMIN_TOKEN` (ou `E2E_ADMIN_TOKEN`) dans l'environnement.
+- sans token, les tests builder sont skip avec message explicite.
+
+Bonnes pratiques :
+
+- lancer les tests après toute modification significative Builder ou locale,
+- si un diff visuel apparaît, confirmer d'abord qu'il est attendu avant mise à jour,
+- ne pas déployer tant que la suite UX/UI n'est pas verte.

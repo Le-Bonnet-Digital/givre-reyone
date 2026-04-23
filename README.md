@@ -35,3 +35,23 @@ Avant toute modification (Builder ou local), toujours récupérer l'état le plu
 ## Où lire la procédure complète
 
 Voir `docs/content-workflow.md`.
+
+## Validation UX/UI automatisée (local)
+
+Le projet inclut une suite E2E Playwright pour navigation + screenshots + garde-fous UX.
+
+Commandes principales :
+
+- `npm run test:e2e` : exécution headless complète (smoke + builder + visual).
+- `npm run test:e2e:smoke` : parcours critiques + garde-fous UX.
+- `npm run test:e2e:builder` : vérifications E2E du builder authentifié.
+- `npm run test:e2e:visual` : baseline visuelle (`toHaveScreenshot`).
+- `npm run test:e2e:ui` : mode interactif Playwright UI.
+- `npm run test:e2e:update` : mise à jour des snapshots visuels attendus.
+
+La suite démarre automatiquement le serveur local via `npm run dev:vercel` (ou réutilise un serveur déjà actif).
+
+Prérequis tests builder :
+
+- définir `ADMIN_TOKEN` (ou `E2E_ADMIN_TOKEN`) dans l'environnement de test,
+- la suite injecte le token dans `localStorage` pour ouvrir `/builder.html` en session authentifiée.
