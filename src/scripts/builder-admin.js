@@ -201,21 +201,91 @@ function ensureFrameStyles(editor, template) {
   style.textContent = `${template.css}\n.reveal{opacity:1!important;transform:none!important;}`;
 }
 
+function iconSvg(name) {
+  const icons = {
+    section: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16"></path><path d="M4 12h16"></path><path d="M4 18h16"></path></svg>',
+    twoColumns: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="8" height="14"></rect><rect x="13" y="5" width="8" height="14"></rect></svg>',
+    title: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16"></path><path d="M12 7v10"></path></svg>',
+    text: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16"></path><path d="M4 12h11"></path><path d="M4 17h14"></path></svg>',
+    link: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 14l4-4"></path><path d="M7 17a4 4 0 0 1 0-6l2-2a4 4 0 0 1 6 0"></path><path d="M17 7a4 4 0 0 1 0 6l-2 2a4 4 0 0 1-6 0"></path></svg>',
+    list: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 7h11"></path><path d="M9 12h11"></path><path d="M9 17h11"></path><circle cx="5" cy="7" r="1"></circle><circle cx="5" cy="12" r="1"></circle><circle cx="5" cy="17" r="1"></circle></svg>',
+    button: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="7" width="18" height="10" rx="5"></rect><path d="M10 12h4"></path></svg>',
+    image: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="1"></rect><circle cx="9" cy="10" r="1.5"></circle><path d="M21 16l-6-5-5 5-3-3-4 4"></path></svg>',
+    spacer: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h16"></path><path d="M4 16h16"></path><path d="M12 9v6"></path></svg>'
+  };
+
+  return icons[name] || icons.text;
+}
+
+function blockLabel(name, iconName) {
+  return `<span class="gjs-block-icon">${iconSvg(iconName)}</span><span>${name}</span>`;
+}
+
+function applyPanelButtonTooltips() {
+  const tooltipMap = [
+    { key: "sw-visibility", label: "Afficher les contours" },
+    { key: "preview", label: "Previsualiser" },
+    { key: "fullscreen", label: "Plein ecran" },
+    { key: "open-layers", label: "Afficher les calques" },
+    { key: "open-sm", label: "Afficher les styles" },
+    { key: "open-tm", label: "Afficher les proprietes" },
+    { key: "open-blocks", label: "Afficher les blocs" },
+    { key: "open-assets", label: "Bibliotheque de medias" },
+    { key: "core:undo", label: "Annuler" },
+    { key: "core:redo", label: "Retablir" }
+  ];
+
+  const panelButtons = document.querySelectorAll(".builder-canvas .gjs-pn-btn");
+  panelButtons.forEach((button) => {
+    const element = button;
+    const command = element.getAttribute("data-command") || "";
+    const elementId = element.id || "";
+    const classes = element.getAttribute("class") || "";
+    const source = [
+      command,
+      classes,
+      elementId
+    ]
+      .join(" ")
+      .toLowerCase();
+
+    const match = tooltipMap.find((entry) => source.includes(entry.key.toLowerCase()));
+    let label = match?.label || "";
+
+    if (!label) {
+      const fallback = command || elementId || "";
+      const cleaned = fallback
+        .replace(/^core:/i, "")
+        .replace(/^sw-/i, "")
+        .replace(/^open-/i, "open ")
+        .replace(/[-_:]/g, " ")
+        .trim();
+
+      label = cleaned ? cleaned.charAt(0).toUpperCase() + cleaned.slice(1) : "Action";
+    }
+
+    element.setAttribute("title", label);
+    element.setAttribute("aria-label", label);
+  });
+}
+
 function addCustomBlocks(editor) {
   const blocks = editor.BlockManager;
   const isContentOnly = state.template?.editingMode === "content-only";
   blocks.getAll().reset();
 
   blocks.add("gr-section", {
-    label: "Section",
+    label: blockLabel("Section", "section"),
     category: "Layout",
+    attributes: { class: "gr-block-label" },
     content: `<section class="content-shell" style="padding: 4rem 0;"><h2>Titre de section</h2><p>Ajoute ton contenu ici.</p></section>`
   });
 
   if (!isContentOnly) {
     blocks.add("gr-two-columns", {
-      label: "2 colonnes",
+      label: blockLabel("2 colonnes", "twoColumns"),
       category: "Layout",
+      attributes: { class: "gr-block-label" },
       content: `
         <section class="content-shell" style="padding: 4rem 0;">
           <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:2rem;">
@@ -228,49 +298,56 @@ function addCustomBlocks(editor) {
   }
 
   blocks.add("gr-title", {
-    label: "Titre",
+    label: blockLabel("Titre", "title"),
     category: "Content",
+    attributes: { class: "gr-block-label" },
     content: "<h2 style=\"margin:0 0 1rem;\">Nouveau titre</h2>"
   });
 
   blocks.add("gr-text", {
-    label: "Texte",
+    label: blockLabel("Texte", "text"),
     category: "Content",
+    attributes: { class: "gr-block-label" },
     content: "<p>Ajoute un paragraphe.</p>"
   });
 
   if (isContentOnly) {
     blocks.add("gr-link", {
-      label: "Lien",
+      label: blockLabel("Lien", "link"),
       category: "Content",
+      attributes: { class: "gr-block-label" },
       content: "<a href=\"#\">Nouveau lien</a>"
     });
 
     blocks.add("gr-list", {
-      label: "Liste",
+      label: blockLabel("Liste", "list"),
       category: "Content",
+      attributes: { class: "gr-block-label" },
       content: "<ul><li>Element 1</li><li>Element 2</li></ul>"
     });
   }
 
   if (!isContentOnly) {
     blocks.add("gr-button", {
-      label: "Bouton",
+      label: blockLabel("Bouton", "button"),
       category: "Content",
+      attributes: { class: "gr-block-label" },
       content: "<a href=\"#\" style=\"display:inline-flex;align-items:center;justify-content:center;padding:1rem 1.5rem;background:#d4a847;color:#0a0a08;text-decoration:none;font-family:Syne,sans-serif;font-size:0.72rem;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;\">Nouveau bouton</a>"
     });
   }
 
   blocks.add("gr-image", {
-    label: "Image",
+    label: blockLabel("Image", "image"),
     category: "Media",
+    attributes: { class: "gr-block-label" },
     content: { type: "image" }
   });
 
   if (!isContentOnly) {
     blocks.add("gr-spacer", {
-      label: "Espace",
+      label: blockLabel("Espace", "spacer"),
       category: "Layout",
+      attributes: { class: "gr-block-label" },
       content: "<div style=\"height: 3rem;\"></div>"
     });
   }
@@ -407,9 +484,12 @@ async function loadEditor(page) {
   });
 
   editor.on("project:load", () => ensureFrameStyles(editor, template));
+  editor.on("project:load", () => applyPanelButtonTooltips());
   editor.on("update", () => setEditorStatus(`Edition de ${page} · modifications locales en cours`));
 
   state.editor = editor;
+  window.__grEditor = editor;
+  applyPanelButtonTooltips();
 }
 
 async function connect(token) {

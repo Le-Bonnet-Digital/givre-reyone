@@ -12,6 +12,24 @@ test.describe("Smoke navigation", () => {
     await expect(page.locator("#contact")).toBeInViewport();
   });
 
+  test("header background spans full viewport width", async ({ page }) => {
+    await page.goto("/");
+
+    const headerMetrics = await page.locator(".v1-header").evaluate((el) => {
+      const rect = el.getBoundingClientRect();
+      const style = window.getComputedStyle(el);
+      return {
+        left: rect.left,
+        rightGap: window.innerWidth - rect.right,
+        backgroundColor: style.backgroundColor
+      };
+    });
+
+    expect(Math.abs(headerMetrics.left)).toBeLessThan(1);
+    expect(Math.abs(headerMetrics.rightGap)).toBeLessThan(1);
+    expect(headerMetrics.backgroundColor).not.toBe("rgba(0, 0, 0, 0)");
+  });
+
   test("legal pages render main content", async ({ page }) => {
     const legalPages = [
       "/mentions-legales.html",

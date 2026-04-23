@@ -69,6 +69,8 @@ Procédure :
 - [ ] Pas d'écart connu Builder/Public sur les pages impactées.
 - [ ] Risques de divergence documentés si convergence partielle.
 - [ ] L'état déployé devient la nouvelle référence opérationnelle.
+- [ ] `git fetch origin` + `git status -sb` confirment l'etat d'ecart local/remote attendu.
+- [ ] `npx vercel ls givre-reyone` confirme le dernier deploy production cible.
 
 ## Convention de nommage des migrations
 
@@ -121,3 +123,32 @@ Bonnes pratiques :
 - lancer les tests après toute modification significative Builder ou locale,
 - si un diff visuel apparaît, confirmer d'abord qu'il est attendu avant mise à jour,
 - ne pas déployer tant que la suite UX/UI n'est pas verte.
+
+## Routine d'audit de convergence (Local / GitHub / Vercel)
+
+Executer cette routine avant cloture d'une livraison:
+
+1. **Etat git local**
+   - `git status --short`
+   - `git status -sb`
+2. **Etat remote**
+   - `git fetch origin`
+   - verifier ahead/behind sur la branche active
+3. **Etat Vercel production**
+   - `npx vercel whoami`
+   - `npx vercel ls givre-reyone`
+4. **Validation qualite**
+   - `npm run test:e2e:builder`
+   - `npm run test:e2e:visual`
+   - `npm run test:e2e:smoke`
+
+Decision:
+- si local est valide mais ahead de GitHub: commit/push,
+- si GitHub est a jour mais Vercel est ancien: deploy,
+- si des tests echouent: corriger avant sync finale.
+
+Notes Builder UI :
+
+- le style GrapesJS (dark mode) est centralisé dans `src/styles/admin.css`,
+- les labels de blocs custom (dans `src/scripts/builder-admin.js`) utilisent des icônes inline SVG pour éviter les dépendances externes,
+- la visual regression couvre aussi les zones sensibles Builder (toolbar, blocks panel, modal overlay).

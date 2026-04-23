@@ -23,6 +23,9 @@ body.version-one {
   position: sticky;
   top: 0;
   z-index: 100;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--v1-border);
 }
 
 .v1-nav {
@@ -32,9 +35,6 @@ body.version-one {
   width: min(100% - (var(--page-gutter) * 2), 1320px);
   height: 64px;
   margin-inline: auto;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(8px);
-  border-bottom: 1px solid var(--v1-border);
 }
 
 .v1-nav-logo {

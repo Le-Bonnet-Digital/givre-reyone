@@ -4,8 +4,15 @@ import { authenticateBuilderSession, skipIfNoAdminToken } from "./helpers/auth";
 async function openBuilder(page: Page) {
   await authenticateBuilderSession(page);
   await page.goto("/builder.html");
+  if (/\/admin\.html$/.test(page.url())) {
+    await authenticateBuilderSession(page);
+    await page.goto("/builder.html");
+  }
   await expect(page).toHaveURL(/\/builder\.html/);
-  await expect(page.locator("#builder-editor-status")).toBeVisible();
+  await page.waitForFunction(() => Boolean((window as Window & { __grEditor?: unknown }).__grEditor), null, {
+    timeout: 30000
+  });
+  await expect(page.locator(".gjs-frame")).toBeVisible({ timeout: 30000 });
 }
 
 test.describe("Builder authenticated UX", () => {
@@ -58,5 +65,19 @@ test.describe("Builder authenticated UX", () => {
     }
     await expect(page.locator("#builder-page")).toHaveValue("politique-cookies");
     await expect(page.locator("#builder-editor-status")).toContainText("politique-cookies");
+  });
+
+  test("panel icons expose descriptive tooltips", async ({ page }) => {
+    await openBuilder(page);
+
+    const unlabeledCount = await page.locator(".gjs-pn-btn").evaluateAll((buttons) => {
+      return buttons.filter((button) => {
+        const title = button.getAttribute("title") || "";
+        const ariaLabel = button.getAttribute("aria-label") || "";
+        return !title.trim() && !ariaLabel.trim();
+      }).length;
+    });
+
+    expect(unlabeledCount).toBe(0);
   });
 });

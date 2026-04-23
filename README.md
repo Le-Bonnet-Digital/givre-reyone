@@ -55,3 +55,30 @@ Prérequis tests builder :
 
 - définir `ADMIN_TOKEN` (ou `E2E_ADMIN_TOKEN`) dans l'environnement de test,
 - la suite injecte le token dans `localStorage` pour ouvrir `/builder.html` en session authentifiée.
+
+## Check ecarts Local / GitHub / Vercel
+
+Avant publication/deploiement, verifier systematiquement les ecarts:
+
+- Local vs GitHub:
+  - `git fetch origin`
+  - `git status -sb` (ahead/behind)
+- GitHub vs Vercel:
+  - `npx vercel ls givre-reyone` (dernier deploy production)
+- Validation qualite:
+  - `npm run test:e2e:builder`
+  - `npm run test:e2e:visual`
+  - `npm run test:e2e:smoke`
+
+Objectif: aucune divergence non expliquee entre l'etat local valide, le remote principal et la derniere prod Vercel.
+
+Polish visuel Builder :
+
+- le thème sombre GrapesJS est surchargé dans `src/styles/admin.css` (panels, blocks, modales/overlays),
+- les blocs custom utilisent des icônes inline SVG (sans dépendance externe),
+- les snapshots visuels incluent la toolbar, le panneau de blocs et une overlay modal.
+
+Quand un changement visuel est attendu :
+
+- régénérer les snapshots avec `npx playwright test tests/e2e/visual-regression.spec.ts --update-snapshots`,
+- puis relancer `npm run test:e2e:visual` pour confirmer la stabilité.
