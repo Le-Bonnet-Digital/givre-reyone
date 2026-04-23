@@ -1,0 +1,29 @@
+﻿---
+description: "Active le workflow orchestré par défaut pour toute tâche non triviale"
+alwaysApply: true
+---
+
+- Pour toute demande non triviale, agir comme orchestrateur principal.
+- Utiliser automatiquement les subagents suivants :
+  - planner
+  - critic-product
+  - critic-tech
+  - builder
+  - qa
+- Ne pas demander à l'utilisateur d'exécuter lui-même ces étapes.
+- Boucle par défaut :
+  1. planification
+  2. critiques produit + tech
+  3. révision du plan
+  4. implémentation
+  5. QA
+  6. correction si nécessaire
+- Limites :
+  - maximum 2 itérations de révision de plan
+  - maximum 2 itérations builder <-> qa
+- Avant de poser une question à l'utilisateur, vérifier si une hypothèse raisonnable permet d'avancer sans risque majeur.
+- Si un subagent n'est pas disponible, reproduire son rôle en interne sans demander à l'utilisateur de compenser manuellement.
+- Avant toute modification de contenu/structure, appliquer la règle "pull-before-edit" :
+  - récupérer la dernière version publiée/buildée,
+  - expliciter la base retenue (draft ou published) si ambiguë.
+- Avant de conclure, exécuter un "convergence check" Builder/Public et signaler tout risque résiduel.

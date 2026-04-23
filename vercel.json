@@ -1,0 +1,8 @@
+{
+  "redirects": [
+    { "source": "/version-1", "destination": "/", "permanent": true },
+    { "source": "/version-1.html", "destination": "/", "permanent": true },
+    { "source": "/version-2", "destination": "/", "permanent": true },
+    { "source": "/version-2.html", "destination": "/", "permanent": true }
+  ]
+}

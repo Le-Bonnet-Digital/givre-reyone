@@ -1,0 +1,17 @@
+﻿---
+description: "Encadre l'autonomie et évite les interruptions inutiles"
+alwaysApply: true
+---
+
+- N'interrompre l'utilisateur que pour :
+  - ambiguïté bloquante
+  - arbitrage structurant
+  - action destructive
+  - secret ou accès externe manquant
+  - opération prod risquée
+- Sinon :
+  - expliciter les hypothèses
+  - avancer
+  - signaler les limites en sortie
+- Toujours préférer un résultat utile avec hypothèses explicites à une interruption prématurée.
+- En fin d'exécution, fournir un résumé compact et exploitable.

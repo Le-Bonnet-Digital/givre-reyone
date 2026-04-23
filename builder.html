@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Builder - Givre Reyone</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/src/styles/base.css">
+  <link rel="stylesheet" href="/src/styles/admin.css">
+</head>
+<body class="builder-admin-page">
+  <main class="builder-workspace builder-workspace-page">
+    <header class="builder-toolbar">
+      <div class="builder-toolbar-left">
+        <label class="builder-label builder-label-inline" for="builder-page">Page</label>
+        <select class="builder-select" id="builder-page"></select>
+        <p class="builder-toolbar-status" id="builder-editor-status">Chargement...</p>
+      </div>
+
+      <div class="builder-toolbar-right">
+        <button class="builder-ghost-button" id="builder-preview" type="button">Preview</button>
+        <button class="builder-ghost-button" id="builder-save-draft" type="button">Save draft</button>
+        <button class="builder-button" id="builder-publish" type="button">Publish</button>
+        <button class="builder-ghost-button" id="builder-reset" type="button">Reset</button>
+        <button class="builder-ghost-button" id="builder-logout" type="button">Logout</button>
+      </div>
+    </header>
+
+    <div class="builder-canvas-shell">
+      <div id="gjs" class="builder-canvas"></div>
+    </div>
+  </main>
+
+  <script type="module" src="/src/scripts/builder-admin.js"></script>
+</body>
+</html>

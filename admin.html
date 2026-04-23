@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Login - Givre Reyone</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/src/styles/base.css">
+  <link rel="stylesheet" href="/src/styles/admin.css">
+</head>
+<body class="builder-admin-page">
+  <main class="builder-admin-root">
+    <section class="builder-login">
+      <div class="builder-login-card">
+        <p class="builder-eyebrow">GrapesJS Builder</p>
+        <h1 class="builder-title">Connexion admin</h1>
+        <p class="builder-copy">Connecte-toi une seule fois, puis choisis la page a modifier directement dans le builder.</p>
+
+        <form class="builder-login-form" id="admin-login-form" autocomplete="off" novalidate>
+          <label class="builder-label" for="admin-token">Mot de passe admin</label>
+          <input
+            class="builder-input"
+            id="admin-token"
+            type="password"
+            autocomplete="off"
+            autocapitalize="off"
+            autocorrect="off"
+            spellcheck="false"
+            data-lpignore="true"
+            data-1p-ignore="true"
+            data-bwignore="true"
+            required
+          >
+          <button class="builder-button" type="submit">Ouvrir le builder</button>
+        </form>
+
+        <p class="builder-status" id="admin-status" role="status" aria-live="polite"></p>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="/src/scripts/admin-login.js"></script>
+</body>
+</html>
