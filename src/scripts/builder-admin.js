@@ -26,7 +26,8 @@ const state = {
   currentPage: "version-1",
   template: null,
   blobEnabled: false,
-  kvEnabled: false
+  kvEnabled: false,
+  currentSha: null
 };
 
 const els = {
@@ -107,7 +108,12 @@ function authHeaders() {
 }
 
 async function fetchWorkingDocument(page) {
-  return requestJson(`/api/page-content?page=${encodeURIComponent(page)}&mode=draft`);
+  const response = await requestJson(`/api/page-content?page=${encodeURIComponent(page)}&mode=draft`);
+  // Store SHA for conflict detection on publish
+  if (response?.sha) {
+    state.currentSha = response.sha;
+  }
+  return response;
 }
 
 async function saveDraft(page, document) {
@@ -118,12 +124,36 @@ async function saveDraft(page, document) {
   });
 }
 
-async function publishPage(page) {
-  return requestJson("/api/admin/page-content/publish", {
+async function publishPage(page, document) {
+  const response = await fetch("/api/admin/page-content/publish", {
     method: "POST",
     headers: authHeaders(),
-    body: JSON.stringify({ page })
+    body: JSON.stringify({ 
+      page, 
+      document,
+      sha: state.currentSha 
+    })
   });
+
+  const data = await response.json().catch(() => ({}));
+  
+  if (!response.ok) {
+    // Handle conflict (concurrent modification)
+    if (response.status === 409) {
+      const err = new Error(data?.message || "Conflict: page was modified elsewhere");
+      err.code = "conflict";
+      err.status = 409;
+      throw err;
+    }
+    throw new Error(data?.error || "publish_failed");
+  }
+
+  // Update SHA for next publish
+  if (data?.sha) {
+    state.currentSha = data.sha;
+  }
+
+  return data;
 }
 
 async function resetDraft(page) {
@@ -528,19 +558,35 @@ async function connect(token) {
 
 async function handleSaveDraft() {
   if (!state.editor) return;
-  setEditorStatus("Sauvegarde du draft...");
+  setEditorStatus("Validation du draft...");
   const rawDocument = buildDocumentFromEditor();
   const convergedDocument = preparePageDocument(state.currentPage, rawDocument) || rawDocument;
-  const result = await saveDraft(state.currentPage, convergedDocument);
-  setEditorStatus(`Draft sauvegarde · ${result?.draft?.updatedAt || ""}`);
+  // Validate structure
+  if (!convergedDocument.html) {
+    throw new Error("Invalid document: missing HTML");
+  }
+  setEditorStatus(`Draft valide · pret a etre publie`);
+  return convergedDocument;
 }
 
 async function handlePublish() {
   if (!state.editor) return;
-  await handleSaveDraft();
-  setEditorStatus("Publication...");
-  const result = await publishPage(state.currentPage);
-  setEditorStatus(`Page publiee · ${result?.published?.publishedAt || ""}`);
+  setEditorStatus("Validation et publication...");
+  try {
+    const convergedDocument = await handleSaveDraft();
+    const result = await publishPage(state.currentPage, convergedDocument);
+    setEditorStatus(`✓ Page publiee · ${result?.publishedAt || ""}`);
+  } catch (error) {
+    if (error?.code === "conflict" || error?.status === 409) {
+      setEditorStatus("⚠️ Conflit : la page a été modifiée ailleurs. Rechargez et réessayez.");
+      // Reload to get latest version
+      setTimeout(() => {
+        loadEditor(state.currentPage);
+      }, 2000);
+    } else {
+      throw error;
+    }
+  }
 }
 
 async function handleReset() {

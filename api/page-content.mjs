@@ -1,4 +1,5 @@
-import { getPageDocument, isAllowedPage, kvEnabled, blobEnabled } from "./_lib/store.mjs";
+import { isAllowedPage } from "./_lib/store.mjs";
+import { getPageFromGit } from "./_lib/git-store.mjs";
 
 export default async function handler(req, res) {
   res.setHeader("Content-Type", "application/json; charset=utf-8");
@@ -15,12 +16,22 @@ export default async function handler(req, res) {
       return;
     }
 
-    const result = await getPageDocument(page, mode);
+    // Load from Git (source of truth)
+    const { document, sha } = await getPageFromGit(page);
+
+    if (!document) {
+      res.setHeader("Cache-Control", "no-store");
+      res.statusCode = 404;
+      res.end(JSON.stringify({ ok: false, error: "page_not_found" }));
+      return;
+    }
+
     res.statusCode = 200;
     if (mode === "published") {
+      // Cache published content (Git is authoritative)
       res.setHeader(
         "Cache-Control",
-        "public, max-age=300, s-maxage=3600, stale-while-revalidate=86400"
+        "public, max-age=60, s-maxage=120, stale-while-revalidate=86400"
       );
     } else {
       res.setHeader("Cache-Control", "no-store");
@@ -30,17 +41,15 @@ export default async function handler(req, res) {
         ok: true,
         page,
         mode,
-        source: result.source,
-        document: result.document,
-        draft: result.index?.draft || null,
-        published: result.index?.published || null,
-        kvEnabled: kvEnabled(),
-        blobEnabled: blobEnabled()
+        source: "git",
+        document,
+        sha,
+        loadedAt: new Date().toISOString()
       })
     );
-  } catch {
+  } catch (error) {
     res.setHeader("Cache-Control", "no-store");
     res.statusCode = 500;
-    res.end(JSON.stringify({ ok: false, error: "server_error" }));
+    res.end(JSON.stringify({ ok: false, error: error?.code || "server_error" }));
   }
 }

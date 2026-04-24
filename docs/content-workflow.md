@@ -1,52 +1,71 @@
-# Workflow de vérité Builder / Local / KV
+# Workflow "Git = Source de Vérité" (v2)
 
 ## Objectif
 
-Éviter les divergences entre Builder, KV/Blob, code local et rendu public.
+**Un seul endroit pour la vérité : Git.** Pas de divergence entre Builder, code local et production.
 
-Principe directeur : **toujours repartir de la dernière version publiée/buildée validée**.
+- **Avant** : Builder → KV/Blob, Code Local → Git, deux sources de vérité
+- **Maintenant** : Builder → Git, Code Local → Git, une source unique
 
-## Définitions
+## Architecture
 
-- **Builder** : interface d'édition (draft/publish).
-- **Draft** : version en cours côté KV/Blob, non encore promue.
-- **Published** : version publiée côté KV/Blob, utilisée par le public.
-- **Migrations** : transformations versionnées du document (ID unique par changement structurel).
-- **Convergence** : état où Builder et public affichent la même structure/rendu.
+```
+┌─ BUILDER (Interface admin)
+│  ├─ Load page → GET /api/admin/page-content/load?page=X
+│  │  └─ Retourne document + SHA courant
+│  └─ Publish → POST /api/admin/page-content/publish
+│     ├─ Envoie document + SHA
+│     ├─ Vérifie que SHA n'a pas changé (409 Conflict si divergence)
+│     └─ Commit auto vers Git + Push
+│
+├─ CODE LOCAL
+│  └─ Modifier `src/data/pages/{page}.json`
+│     └─ Commit + Push manuel Git
+│
+└─ GIT (Source de vérité unique)
+   ├─ Stocke `src/data/pages/*.json` versionné
+   ├─ Historique complet des modifications
+   └─ Webhook déclenche déploiement automatique
 
-## Flux A — Modifier via Builder
+DÉPLOIEMENT
+   ├─ Vercel deploy depuis Git
+   └─ Cloudflare Pages deploy depuis Git
+```
 
-1. Ouvrir le Builder et vérifier la page cible.
-2. Vérifier que la base de travail correspond au dernier état attendu (draft/published).
-3. Faire les modifications dans Builder.
-4. Save draft, puis Publish.
-5. Vérifier le rendu public.
-6. Si des règles locales (migrations) existent, vérifier que le rendu reste aligné côté Builder.
+## Workflows
 
-## Flux B — Modifier en local
+### Flux A — Modifier via Builder
 
-1. Partir de la dernière version publiée/buildée.
-2. Implémenter le changement local.
-3. Si structure modifiée, créer une **nouvelle migration** avec un **nouvel ID**.
-4. Vérifier l'idempotence de la migration.
-5. Build + tests visuels.
-6. Déployer et vérifier la convergence Builder/Public.
+1. Ouvrir Builder, sélectionner la page
+2. Builder charge le document + SHA courant
+3. Éditer le contenu / structure
+4. Cliquer "Save Draft" → validation locale uniquement
+5. Cliquer "Publish"
+   - ✅ Si pas de modification concurrent : commit auto dans Git + push
+   - ⚠️ Si conflit (SHA a changé) : erreur 409, builder recharge et propose fusion
+6. Git webhook déclenche déploiement (Vercel + Cloudflare)
 
-## Flux C — Conflit ou retard de synchronisation
+### Flux B — Modifier en local
 
-Symptômes typiques :
+1. Éditer `src/data/pages/{page}.json`
+2. `git commit -m "content: update {page}"`
+3. `git push origin main`
+4. Git webhook déclenche déploiement automatique
+5. Builder sera à jour au prochain reload
 
-- Builder et public affichent des sections différentes.
-- Une ancienne structure réapparaît dans Builder.
-- Un style local ne s'applique pas comme prévu.
+### Flux C — Conflit d'édition concurrente
 
-Procédure :
+Exemple : vous éditez en local tandis que quelqu'un publie via le builder.
 
-1. Identifier la base réellement utilisée (draft ou published).
-2. Vérifier les migrations appliquées.
-3. Vérifier si un `projectData` ancien écrase le HTML convergé.
-4. Repartir du dernier état publié puis réappliquer le changement proprement.
-5. Save/Publish/Deploy pour figer la convergence.
+Symptômes :
+- Builder affiche "⚠️ Conflit : la page a été modifiée ailleurs"
+- HTTP `409 Conflict`
+
+Résolution automatique :
+1. Builder recharge la page du serveur
+2. Vous voyez la version la plus récente
+3. Fusionnez manuellement vos changements
+4. Publiez à nouveau
 
 ## Matrice “où faire quoi”
 

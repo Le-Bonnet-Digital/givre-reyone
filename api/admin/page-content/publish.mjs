@@ -1,6 +1,7 @@
 import { isAdminTokenValid } from "../../_lib/auth.mjs";
 import { readJson } from "../../_lib/body.mjs";
-import { blobEnabled, isAllowedPage, kvEnabled, publishDraftDocument } from "../../_lib/store.mjs";
+import { isAllowedPage, isValidBuilderDocument } from "../../_lib/store.mjs";
+import { getPageFromGit, commitPageToGit } from "../../_lib/git-store.mjs";
 
 export default async function handler(req, res) {
   res.setHeader("Content-Type", "application/json; charset=utf-8");
@@ -28,24 +29,51 @@ export default async function handler(req, res) {
   }
 
   const page = body?.page || "";
-  if (!isAllowedPage(page)) {
-    res.statusCode = 400;
-    res.end(JSON.stringify({ ok: false, error: "invalid_page" }));
-    return;
-  }
+  const document = body?.document || null;
+  const expectedSha = body?.sha || null;
 
-  if (!kvEnabled()) {
-    res.statusCode = 503;
-    res.end(JSON.stringify({ ok: false, error: "kv_not_configured", kvEnabled: false, blobEnabled: blobEnabled() }));
+  if (!isAllowedPage(page) || !isValidBuilderDocument(document)) {
+    res.statusCode = 400;
+    res.end(JSON.stringify({ ok: false, error: "invalid_payload" }));
     return;
   }
 
   try {
-    const published = await publishDraftDocument(page);
+    // Add metadata
+    document.publishedAt = new Date().toISOString();
+
+    // Commit to Git with conflict detection
+    const result = await commitPageToGit(
+      page,
+      document,
+      expectedSha,
+      `[Builder] Publish page: ${page}\n\nPublished by admin via builder interface.\nTimestamp: ${document.publishedAt}`
+    );
+
     res.statusCode = 200;
-    res.end(JSON.stringify({ ok: true, page, published }));
+    res.end(
+      JSON.stringify({
+        ok: true,
+        page,
+        sha: result.sha,
+        url: result.url,
+        publishedAt: document.publishedAt
+      })
+    );
   } catch (error) {
-    res.statusCode = error?.code === "draft_not_found" ? 404 : 500;
-    res.end(JSON.stringify({ ok: false, error: error?.code || "server_error" }));
+    if (error.code === "conflict" || error.status === 409) {
+      res.statusCode = 409;
+      res.end(
+        JSON.stringify({
+          ok: false,
+          error: "conflict",
+          message: "This page was modified elsewhere. Please reload and try again.",
+          detail: "concurrent_modification"
+        })
+      );
+    } else {
+      res.statusCode = 500;
+      res.end(JSON.stringify({ ok: false, error: error?.code || "server_error" }));
+    }
   }
 }

@@ -1,0 +1,9 @@
+{
+  "id": "version-1",
+  "name": "Version 1 - Givré Réyoné",
+  "html": "<header class=\"v1-header\"><nav class=\"v1-nav\"><div class=\"v1-nav-logo\"><span>Givré</span><span class=\"v1-nav-logo-accent\">Réyoné</span></div><a href=\"#contact\" class=\"v1-cta-nav\">Réserver / Devis</a></nav></header><main><section class=\"v1-hero\"><div class=\"v1-hero-content\"><span class=\"v1-hero-badge\">Artisanal · Ananas Victoria · Réunion</span><h1><span>L'Ananas Victoria</span><br/><span>comme vous ne</span><br/><span>l'avez</span> <em><span>jamais bu.</span></em></h1><p class=\"v1-hero-sub\"><span>Un granité 100% fruit, artisanal, transformé sous vos yeux.</span><br/><span>Pas un sirop. Pas un gadget. Une expérience.</span></p><p class=\"v1-hero-proof\">80% de ceux qui goûtent passent à l'achat</p><a href=\"#contact\" class=\"v1-cta-primary\">Découvrir le Givré Réyoné</a></div></section></main>",
+  "css": "",
+  "projectData": null,
+  "revision": "initial",
+  "revisionedAt": "2026-04-24T00:00:00Z"
+}
