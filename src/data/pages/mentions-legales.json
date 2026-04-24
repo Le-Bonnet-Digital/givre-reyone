@@ -1,9 +1,9 @@
 {
   "id": "mentions-legales",
   "name": "Mentions légales",
-  "html": "<section class=\"legal-page\"><h1>Mentions légales</h1><p>À compléter...</p></section>",
+  "html": "<main class=\"legal-main\">\r\n    <a class=\"legal-back\" href=\"/\">Retour au site</a>\r\n    <h1>Mentions légales</h1>\r\n    <p class=\"legal-updated\">Dernière mise à jour : 23 avril 2026</p>\r\n\r\n    <section class=\"legal-section\">\r\n      <h2>Éditeur du site</h2>\r\n      <p>Le site est édité par Givré Réyoné.</p>\r\n      <p>Raison sociale : [à compléter]</p>\r\n      <p>Forme juridique : [à compléter]</p>\r\n      <p>SIREN/SIRET : [à compléter]</p>\r\n      <p>Adresse : [à compléter]</p>\r\n      <p>Email : <a href=\"mailto:contact@givre-reyone.re\">contact@givre-reyone.re</a></p>\r\n      <p>Téléphone : +262 693 10 39 08</p>\r\n    </section>\r\n\r\n    <section class=\"legal-section\">\r\n      <h2>Directeur de publication</h2>\r\n      <p>[Nom du directeur de publication à compléter]</p>\r\n    </section>\r\n\r\n    <section class=\"legal-section\">\r\n      <h2>Hébergement</h2>\r\n      <p>Ce site est hébergé par Vercel Inc.</p>\r\n      <p>340 S Lemon Ave #4133, Walnut, CA 91789, USA</p>\r\n      <p><a href=\"https://vercel.com\" target=\"_blank\" rel=\"noopener noreferrer\">https://vercel.com</a></p>\r\n    </section>\r\n\r\n    <section class=\"legal-section\">\r\n      <h2>Propriété intellectuelle</h2>\r\n      <p>L'ensemble des contenus présents sur ce site (textes, visuels, logos, éléments graphiques) est protégé par le droit d'auteur et reste la propriété de Givré Réyoné, sauf mention contraire.</p>\r\n    </section>\r\n  </main>",
   "css": "",
   "projectData": null,
-  "revision": "initial",
-  "revisionedAt": "2026-04-24T00:00:00Z"
+  "revision": "git-backfill-restore-v1",
+  "revisionedAt": "2026-04-24T13:14:10.204Z"
 }

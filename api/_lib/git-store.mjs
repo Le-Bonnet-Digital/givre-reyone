@@ -4,6 +4,9 @@
  * - Writes commits with conflict detection (409 if SHA mismatch)
  */
 
+import { createHash } from "node:crypto";
+import { readFile } from "node:fs/promises";
+
 const GITHUB_API = "https://api.github.com";
 const GITHUB_OWNER = process.env.GITHUB_OWNER || "Le-Bonnet-Digital";
 const GITHUB_REPO = process.env.GITHUB_REPO || "givre-reyone";
@@ -15,6 +18,10 @@ function getAuthHeader() {
     return {};
   }
   return { Authorization: `Bearer ${GITHUB_TOKEN}` };
+}
+
+function getLocalPagePath(page) {
+  return new URL(`../../src/data/pages/${page}.json`, import.meta.url);
 }
 
 async function githubFetch(path, options = {}) {
@@ -66,6 +73,23 @@ export async function getPageFromGit(page) {
     };
   } catch (error) {
     if (error.code === "not_found") {
+      return { document: null, sha: null, path: null };
+    }
+    throw error;
+  }
+}
+
+export async function getPageFromLocalRepo(page) {
+  try {
+    const fileUrl = getLocalPagePath(page);
+    const content = await readFile(fileUrl, "utf8");
+    return {
+      document: JSON.parse(content),
+      sha: createHash("sha1").update(content).digest("hex"),
+      path: fileUrl.pathname
+    };
+  } catch (error) {
+    if (error?.code === "ENOENT") {
       return { document: null, sha: null, path: null };
     }
     throw error;

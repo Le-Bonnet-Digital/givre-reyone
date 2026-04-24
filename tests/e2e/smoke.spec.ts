@@ -15,9 +15,23 @@ test.describe("Smoke navigation", () => {
   test("home renders key sections and contact anchor", async ({ page }) => {
     await page.goto("/");
 
+    await expect(page).toHaveTitle(/Givre Reyone|Givré Réyoné/);
     await expect(page.locator("body")).toHaveAttribute("data-page", "version-1");
     await expect(page.locator(".v1-hero")).toBeVisible();
+    await expect(page.locator(".v1-section-product")).toBeVisible();
+    await expect(page.locator(".v1-section-problem")).toBeVisible();
+    await expect(page.locator(".v1-section-avantages")).toBeVisible();
+    await expect(page.locator(".v1-section-social")).toBeVisible();
+    await expect(page.locator(".v1-section-offre")).toBeVisible();
+    await expect(page.locator(".v1-section-objections")).toBeVisible();
     await expect(page.locator("#contact")).toBeVisible();
+    await expect(page.locator(".v1-hero picture img#ibh3cx")).toBeVisible();
+    await expect(page.locator('a[href="#contact"]')).toHaveCount(5);
+    await expect(page.locator("footer .v1-legal-links")).toBeVisible();
+    await expect(page.locator('footer .v1-legal-links a[href="/mentions-legales.html"]')).toBeVisible();
+    await expect(page.locator('footer .v1-legal-links a[href="/politique-confidentialite.html"]')).toBeVisible();
+    await expect(page.locator('footer .v1-legal-links a[href="/politique-cookies.html"]')).toBeVisible();
+    await expect(page.locator('footer .v1-legal-links a[href="/cgu-cgv.html"]')).toBeVisible();
 
     await page.click('a[href="#contact"]');
     await expect(page.locator("#contact")).toBeInViewport();
@@ -52,8 +66,9 @@ test.describe("Smoke navigation", () => {
 
     for (const path of legalPages) {
       await page.goto(path);
-      await expect(page.locator("main")).toBeVisible();
+      await expect(page.locator("main.legal-main")).toBeVisible();
       await expect(page.locator("h1")).toBeVisible();
+      await expect(page.locator("body")).not.toContainText("À compléter");
     }
   });
 

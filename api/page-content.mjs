@@ -1,5 +1,21 @@
 import { isAllowedPage } from "./_lib/store.mjs";
-import { getPageFromGit } from "./_lib/git-store.mjs";
+import { getPageFromGit, getPageFromLocalRepo } from "./_lib/git-store.mjs";
+
+function shouldReadLocalWorkingTree() {
+  return process.env.NODE_ENV !== "production";
+}
+
+async function loadPageDocument(page) {
+  if (shouldReadLocalWorkingTree()) {
+    const local = await getPageFromLocalRepo(page);
+    if (local?.document) {
+      return { ...local, source: "local-git" };
+    }
+  }
+
+  const remote = await getPageFromGit(page);
+  return { ...remote, source: "git" };
+}
 
 export default async function handler(req, res) {
   res.setHeader("Content-Type", "application/json; charset=utf-8");
@@ -17,7 +33,7 @@ export default async function handler(req, res) {
     }
 
     // Load from Git (source of truth)
-    const { document, sha } = await getPageFromGit(page);
+    const { document, sha, source } = await loadPageDocument(page);
 
     if (!document) {
       res.setHeader("Cache-Control", "no-store");
@@ -41,7 +57,7 @@ export default async function handler(req, res) {
         ok: true,
         page,
         mode,
-        source: "git",
+        source,
         document,
         sha,
         loadedAt: new Date().toISOString()

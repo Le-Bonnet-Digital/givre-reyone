@@ -1,9 +1,9 @@
 {
   "id": "politique-cookies",
   "name": "Politique cookies",
-  "html": "<section class=\"legal-page\"><h1>Politique cookies</h1><p>À compléter...</p></section>",
+  "html": "<main class=\"legal-main\">\r\n    <a class=\"legal-back\" href=\"/\">Retour au site</a>\r\n    <h1>Politique cookies</h1>\r\n    <p class=\"legal-updated\">Dernière mise à jour : 23 avril 2026</p>\r\n\r\n    <section class=\"legal-section\">\r\n      <h2>Définition</h2>\r\n      <p>Un cookie est un petit fichier déposé sur votre terminal lors de la navigation.</p>\r\n    </section>\r\n\r\n    <section class=\"legal-section\">\r\n      <h2>Cookies utilisés</h2>\r\n      <ul>\r\n        <li>Cookies strictement nécessaires au fonctionnement technique du site.</li>\r\n        <li>À ce jour, aucun cookie publicitaire tiers n'est déployé sur la version publique.</li>\r\n      </ul>\r\n    </section>\r\n\r\n    <section class=\"legal-section\">\r\n      <h2>Gestion des cookies</h2>\r\n      <p>Vous pouvez configurer votre navigateur pour refuser tout ou partie des cookies. Certaines fonctionnalités peuvent alors être altérées.</p>\r\n    </section>\r\n\r\n    <section class=\"legal-section\">\r\n      <h2>Contact</h2>\r\n      <p>Pour toute question sur les cookies : <a href=\"mailto:contact@givre-reyone.re\">contact@givre-reyone.re</a>.</p>\r\n    </section>\r\n  </main>",
   "css": "",
   "projectData": null,
-  "revision": "initial",
-  "revisionedAt": "2026-04-24T00:00:00Z"
+  "revision": "git-backfill-restore-v1",
+  "revisionedAt": "2026-04-24T13:14:10.204Z"
 }

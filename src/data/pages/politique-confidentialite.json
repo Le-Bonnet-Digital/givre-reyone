@@ -1,9 +1,9 @@
 {
   "id": "politique-confidentialite",
   "name": "Politique de confidentialité",
-  "html": "<section class=\"legal-page\"><h1>Politique de confidentialité</h1><p>À compléter...</p></section>",
+  "html": "<main class=\"legal-main\">\r\n    <a class=\"legal-back\" href=\"/\">Retour au site</a>\r\n    <h1>Politique de confidentialité</h1>\r\n    <p class=\"legal-updated\">Dernière mise à jour : 23 avril 2026</p>\r\n\r\n    <section class=\"legal-section\">\r\n      <h2>Responsable du traitement</h2>\r\n      <p>Givré Réyoné est responsable du traitement des données collectées via les canaux de contact.</p>\r\n    </section>\r\n\r\n    <section class=\"legal-section\">\r\n      <h2>Données traitées</h2>\r\n      <ul>\r\n        <li>Données d'identification et de contact transmises volontairement (email, téléphone, message).</li>\r\n        <li>Données techniques minimales liées à la navigation (logs techniques d'hébergement).</li>\r\n      </ul>\r\n    </section>\r\n\r\n    <section class=\"legal-section\">\r\n      <h2>Finalités et base légale</h2>\r\n      <ul>\r\n        <li>Répondre aux demandes de contact (base légale : intérêt légitime / mesures précontractuelles).</li>\r\n        <li>Suivre la relation commerciale si une demande aboutit (base légale : exécution contractuelle).</li>\r\n      </ul>\r\n    </section>\r\n\r\n    <section class=\"legal-section\">\r\n      <h2>Durée de conservation</h2>\r\n      <p>Les données sont conservées pendant la durée strictement nécessaire au traitement de la demande, puis archivées ou supprimées selon les obligations légales applicables.</p>\r\n    </section>\r\n\r\n    <section class=\"legal-section\">\r\n      <h2>Vos droits</h2>\r\n      <p>Conformément à la réglementation applicable, vous disposez des droits d'accès, de rectification, d'effacement, de limitation, d'opposition et de portabilité.</p>\r\n      <p>Pour exercer vos droits : <a href=\"mailto:contact@givre-reyone.re\">contact@givre-reyone.re</a>.</p>\r\n    </section>\r\n  </main>",
   "css": "",
   "projectData": null,
-  "revision": "initial",
-  "revisionedAt": "2026-04-24T00:00:00Z"
+  "revision": "git-backfill-restore-v1",
+  "revisionedAt": "2026-04-24T13:14:10.204Z"
 }

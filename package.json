@@ -11,6 +11,8 @@
     "dev:vercel": "node scripts/emit-v1-hero-fragment.mjs && npx dotenv -e .env.local -- npx vercel dev",
     "build": "node scripts/emit-v1-hero-fragment.mjs && vite build",
     "preview": "vite preview",
+    "backfill:git-pages": "node scripts/backfill-git-pages.mjs",
+    "backfill:git-pages:write": "node scripts/backfill-git-pages.mjs --write",
     "test:e2e": "playwright test",
     "test:e2e:smoke": "playwright test tests/e2e/smoke.spec.ts tests/e2e/ux-ui-guards.spec.ts",
     "test:e2e:builder": "playwright test tests/e2e/builder.spec.ts",

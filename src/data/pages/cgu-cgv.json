@@ -1,9 +1,9 @@
 {
   "id": "cgu-cgv",
   "name": "CGU / CGV",
-  "html": "<section class=\"legal-page\"><h1>CGU / CGV</h1><p>À compléter...</p></section>",
+  "html": "<main class=\"legal-main\">\r\n    <a class=\"legal-back\" href=\"/\">Retour au site</a>\r\n    <h1>CGU / CGV</h1>\r\n    <p class=\"legal-updated\">Dernière mise à jour : 23 avril 2026</p>\r\n\r\n    <section class=\"legal-section\">\r\n      <h2>Statut actuel</h2>\r\n      <p>Cette page est publiée pour information et sera complétée ou ajustée selon les modalités de vente et de réservation effectivement proposées par Givré Réyoné.</p>\r\n    </section>\r\n\r\n    <section class=\"legal-section\">\r\n      <h2>Réservations et prestations</h2>\r\n      <p>Les demandes de prestations (événements, privatisation, professionnel) sont traitées au cas par cas après prise de contact.</p>\r\n    </section>\r\n\r\n    <section class=\"legal-section\">\r\n      <h2>Acceptation</h2>\r\n      <p>En sollicitant une prestation, le client reconnaît avoir pris connaissance des informations communiquées lors de l'échange commercial.</p>\r\n    </section>\r\n\r\n    <section class=\"legal-section\">\r\n      <h2>Contact</h2>\r\n      <p>Pour toute demande liée aux conditions : <a href=\"mailto:contact@givre-reyone.re\">contact@givre-reyone.re</a>.</p>\r\n    </section>\r\n  </main>",
   "css": "",
   "projectData": null,
-  "revision": "initial",
-  "revisionedAt": "2026-04-24T00:00:00Z"
+  "revision": "git-backfill-restore-v1",
+  "revisionedAt": "2026-04-24T13:14:10.204Z"
 }
