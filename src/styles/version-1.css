@@ -1,5 +1,6 @@
 :root {
   --v1-jaune: #f5c842;
+  --v1-or: #8c6200;
   --v1-jaune-clair: #fff8d6;
   --v1-jaune-pale: #fffdf0;
   --v1-vert: #3b7a2e;
@@ -428,7 +429,7 @@ body.version-one {
 
 .v1-avantage-num {
   margin-bottom: 0.75rem;
-  color: var(--v1-jaune);
+  color: var(--v1-or);
   font-family: "Playfair Display", serif;
   font-size: 2.5rem;
   font-weight: 900;
@@ -497,7 +498,7 @@ body.version-one {
 .v1-stat-label {
   font-size: 0.85rem;
   line-height: 1.4;
-  opacity: 0.85;
+  opacity: 1;
 }
 
 .v1-section-offre {
