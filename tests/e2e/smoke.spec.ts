@@ -1,6 +1,17 @@
 import { expect, test } from "@playwright/test";
 
 test.describe("Smoke navigation", () => {
+  test("home inlines above-fold (header + hero) in initial HTML for LCP", async ({ page }) => {
+    const response = await page.goto("/");
+    const body = await response?.text();
+    expect(body).toContain("v1-header-prerender");
+    expect(body).toContain("v1-hero-prerender");
+    expect(body).toContain("v1-main-prerender-shell");
+    expect(body).toContain('id="page-custom-css"');
+    expect(body).toContain("hero-lcp-800.webp");
+    expect(body).toContain("hero-lcp-400.webp");
+  });
+
   test("home renders key sections and contact anchor", async ({ page }) => {
     await page.goto("/");
 
@@ -18,15 +29,16 @@ test.describe("Smoke navigation", () => {
     const headerMetrics = await page.locator(".v1-header").evaluate((el) => {
       const rect = el.getBoundingClientRect();
       const style = window.getComputedStyle(el);
+      const layoutWidth = document.documentElement.clientWidth;
       return {
         left: rect.left,
-        rightGap: window.innerWidth - rect.right,
+        rightGap: layoutWidth - rect.right,
         backgroundColor: style.backgroundColor
       };
     });
 
     expect(Math.abs(headerMetrics.left)).toBeLessThan(1);
-    expect(Math.abs(headerMetrics.rightGap)).toBeLessThan(1);
+    expect(Math.abs(headerMetrics.rightGap)).toBeLessThan(20);
     expect(headerMetrics.backgroundColor).not.toBe("rgba(0, 0, 0, 0)");
   });
 

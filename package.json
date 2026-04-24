@@ -2,19 +2,28 @@
   "name": "givre-reyone",
   "private": true,
   "version": "1.0.0",
+  "type": "module",
+  "engines": {
+    "node": ">=22.0.0 <23.0.0"
+  },
   "scripts": {
-    "dev": "vite",
-    "dev:vercel": "npx dotenv -e .env.local -- npx vercel dev",
-    "build": "vite build",
+    "dev": "node scripts/emit-v1-hero-fragment.mjs && vite",
+    "dev:vercel": "node scripts/emit-v1-hero-fragment.mjs && npx dotenv -e .env.local -- npx vercel dev",
+    "build": "node scripts/emit-v1-hero-fragment.mjs && vite build",
     "preview": "vite preview",
     "test:e2e": "playwright test",
     "test:e2e:smoke": "playwright test tests/e2e/smoke.spec.ts tests/e2e/ux-ui-guards.spec.ts",
     "test:e2e:builder": "playwright test tests/e2e/builder.spec.ts",
     "test:e2e:visual": "playwright test tests/e2e/visual-regression.spec.ts",
     "test:e2e:ui": "playwright test --ui",
-    "test:e2e:update": "playwright test --update-snapshots"
+    "test:e2e:update": "playwright test --update-snapshots",
+    "assets:hero-lcp": "node scripts/generate-hero-lcp-asset.mjs",
+    "lighthouse:home": "npx --yes lighthouse@12 http://127.0.0.1:4173/ --only-categories=performance --preset=desktop --output=html --output-path=lighthouse-home.html --chrome-flags=--headless=new --quiet",
+    "emit:v1-hero": "node scripts/emit-v1-hero-fragment.mjs"
   },
   "dependencies": {
+    "@fontsource/dm-sans": "^5.2.8",
+    "@fontsource/playfair-display": "^5.2.8",
     "@vercel/blob": "^2.3.3",
     "@vercel/kv": "^3.0.0",
     "grapesjs": "^0.22.15",
@@ -24,6 +33,7 @@
     "@axe-core/playwright": "^4.11.2",
     "@playwright/test": "^1.59.1",
     "dotenv-cli": "^11.0.0",
+    "sharp": "^0.34.5",
     "vite": "^8.0.10"
   }
 }

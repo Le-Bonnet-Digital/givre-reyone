@@ -1,5 +1,5 @@
 import publishedSeed from "./version-1-published-seed.js";
-import { applyPendingMigrations } from "./version-1-migrations.js";
+import { applyPendingMigrations, optimizeHeroLcpImage } from "./version-1-migrations.js";
 
 function clone(value) {
   return value ? JSON.parse(JSON.stringify(value)) : null;
@@ -18,7 +18,11 @@ export function prepareVersion1Document(document) {
     projectData: base.projectData || null
   };
 
-  return applyPendingMigrations(normalized).document;
+  const { document: migrated } = applyPendingMigrations(normalized);
+  return {
+    ...migrated,
+    html: optimizeHeroLcpImage(migrated.html || "")
+  };
 }
 
 export function getVersion1InitialDocument() {

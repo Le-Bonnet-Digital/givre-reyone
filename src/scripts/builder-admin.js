@@ -1,7 +1,21 @@
-import grapesjs from "grapesjs";
-import presetWebpage from "grapesjs-preset-webpage";
-import "grapesjs/dist/css/grapes.min.css";
 import { PAGE_IDS, getPageTemplate, preparePageDocument } from "../templates/page-templates.js";
+
+let grapesModulePromise = null;
+
+/**
+ * Idempotent: GrapesJS + CSS + preset are loaded once; subsequent page switches reuse the module.
+ * Keeps the initial builder JS bundle small; heavy deps load as async chunks after auth.
+ */
+async function ensureGrapesModules() {
+  if (!grapesModulePromise) {
+    grapesModulePromise = (async () => {
+      await import("grapesjs/dist/css/grapes.min.css");
+      const [grapesMod, presetMod] = await Promise.all([import("grapesjs"), import("grapesjs-preset-webpage")]);
+      return { grapesjs: grapesMod.default, presetWebpage: presetMod.default };
+    })();
+  }
+  return grapesModulePromise;
+}
 
 const STORAGE_KEY = "gr_admin_token";
 const LAST_PAGE_KEY = "gr_admin_last_page";
@@ -436,6 +450,8 @@ async function loadEditor(page) {
   setLastPage(page);
   state.template = template;
   destroyEditor();
+  setEditorStatus("Chargement de l'editeur...");
+  const { grapesjs, presetWebpage } = await ensureGrapesModules();
   setEditorStatus(`Chargement de ${page}...`);
 
   const response = await fetchWorkingDocument(page);

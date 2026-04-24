@@ -8,18 +8,24 @@
     name="description"
     content="Givre Reyone, granite artisanal 100% Ananas Victoria a La Reunion."
   />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link
-    href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500&display=swap"
-    rel="stylesheet"
+    rel="preload"
+    as="image"
+    imagesrcset="/hero-lcp-400.webp 400w, /hero-lcp-800.webp 800w"
+    imagesizes="(max-width: 480px) 92vw, 420px"
+    href="/hero-lcp-800.webp"
+    type="image/webp"
+    fetchpriority="high"
   />
   <link rel="stylesheet" href="/src/styles/base.css" />
   <link rel="stylesheet" href="/src/styles/version-1.css" />
+  <!--V1_SEED_CUSTOM_CSS-->
 </head>
 <body class="version-one" data-page="version-1">
   <div id="page-status" role="status" aria-live="polite"></div>
-  <div id="page-root"></div>
-  <script type="module" src="/src/scripts/page-shell.js"></script>
+  <div id="page-root">
+    <!--V1_ABOVE_FOLD_PRERENDER-->
+  </div>
+  <script type="module" src="/src/scripts/page-shell-home.js"></script>
 </body>
 </html>

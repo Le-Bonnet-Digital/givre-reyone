@@ -2,7 +2,6 @@ import { getPageDocument, isAllowedPage, kvEnabled, blobEnabled } from "./_lib/s
 
 export default async function handler(req, res) {
   res.setHeader("Content-Type", "application/json; charset=utf-8");
-  res.setHeader("Cache-Control", "no-store");
 
   try {
     const url = new URL(req.url, "http://localhost");
@@ -10,6 +9,7 @@ export default async function handler(req, res) {
     const mode = url.searchParams.get("mode") === "published" ? "published" : "draft";
 
     if (!isAllowedPage(page)) {
+      res.setHeader("Cache-Control", "no-store");
       res.statusCode = 400;
       res.end(JSON.stringify({ ok: false, error: "invalid_page" }));
       return;
@@ -17,6 +17,14 @@ export default async function handler(req, res) {
 
     const result = await getPageDocument(page, mode);
     res.statusCode = 200;
+    if (mode === "published") {
+      res.setHeader(
+        "Cache-Control",
+        "public, max-age=60, s-maxage=120, stale-while-revalidate=86400"
+      );
+    } else {
+      res.setHeader("Cache-Control", "no-store");
+    }
     res.end(
       JSON.stringify({
         ok: true,
@@ -31,6 +39,7 @@ export default async function handler(req, res) {
       })
     );
   } catch {
+    res.setHeader("Cache-Control", "no-store");
     res.statusCode = 500;
     res.end(JSON.stringify({ ok: false, error: "server_error" }));
   }

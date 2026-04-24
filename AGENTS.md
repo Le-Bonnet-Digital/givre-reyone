@@ -53,6 +53,23 @@ Sinon, tu avances avec des hypothèses raisonnables et tu les rends explicites.
 - Tout changement structurel local doit être versionné via une migration avec un ID inédit.
 - Refuser les transformations structurelles silencieuses non versionnées.
 - Vérifier la convergence Builder/Public avant de clôturer la tâche.
+- Après une mise à jour visible du **header, du héro ou du CSS builder** visible above-fold, lancer un **build** (émission du fragment HTML + `v1-seed-custom.css` injecté dans le `<head>`) pour aligner le premier paint avec le publié.
+
+## Mesure Lighthouse (homepage)
+
+1. `npm run build` puis `npx vite preview --port 4173 --strictPort` (laisser le serveur actif).
+2. Dans un autre terminal : `npm run lighthouse:home` — le rapport HTML est écrit à la racine du dépôt sous `lighthouse-home.html` (gitignore recommandé si besoin). Utiliser le même port et la même machine pour comparer avant/après.
+
+## API `GET /api/page-content` (cache)
+
+- Réponses **`mode=published`** : en-tête `Cache-Control: public, max-age=60, s-maxage=120, stale-while-revalidate=86400` pour limiter la charge et stabiliser les mesures perf ; après une **publication** depuis l’admin, le contenu peut rester à l’ancienne version côté CDN/navigateur jusqu’à **~1–2 minutes** (acceptable pour ce site).
+- Réponses **draft** ou erreurs : `no-store`.
+
+## Dépannage local (Windows)
+
+- **Avertissement Node `MODULE_TYPELESS_PACKAGE_JSON`** sur `emit-v1-hero-fragment.mjs` : le projet déclare [`"type": "module"`](package.json) pour que les `.js` sous `src/` soient traités comme ESM sans re-parse ni avertissement.
+- **Version de Node** : le dépôt cible **Node 22 LTS** (fichier [`.nvmrc`](.nvmrc), champ `engines` dans [`package.json`](package.json)). Sous Windows, **Node 23+** peut déclencher l’assertion libuv `UV_HANDLE_CLOSING` / `src\win\async.c` (voir le ticket amont [nodejs/node#56645](https://github.com/nodejs/node/issues/56645)) ; ce n’est pas un bug du code applicatif.
+- Si le message apparaît encore avec **Node 22** : lancer `npm run dev` (Vite seul) pour isoler **`vercel dev`** ; éviter deux processus sur le même port ; mettre à jour le CLI Vercel. Si l’application répond correctement, le message peut parfois être ignoré.
 
 ## Format de réponse finale attendu
 

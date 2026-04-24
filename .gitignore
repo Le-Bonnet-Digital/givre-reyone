@@ -6,3 +6,5 @@ dist/
 .cursor-backup-*/
 playwright-report/
 test-results/
+lighthouse-home.html
+lighthouse-home.json

@@ -187,6 +187,16 @@ body.version-one {
   justify-content: center;
 }
 
+.v1-hero-circle .v1-hero-picture,
+.v1-hero-circle .v1-hero-picture img,
+.v1-hero-circle > img#ibh3cx {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-width: 100%;
+  border-radius: 0;
+}
+
 .v1-hero-circle-inner {
   font-family: "Playfair Display", serif;
   font-size: clamp(5rem, 12vw, 8rem);
