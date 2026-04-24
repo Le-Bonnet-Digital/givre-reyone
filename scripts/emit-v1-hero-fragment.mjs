@@ -5,8 +5,30 @@ import { dirname, join } from "node:path";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = join(__dirname, "..");
 
-const { getVersion1InitialDocument } = await import("../src/templates/version-1-document.js");
-const doc = getVersion1InitialDocument();
+async function fetchPublishedFromKv() {
+  if (!process.env.KV_REST_API_URL || !process.env.KV_REST_API_TOKEN) return null;
+  const { kv } = await import("@vercel/kv");
+  const index = await kv.get("builder:version-1");
+  const url = index?.published?.url;
+  if (!url) return null;
+  const res = await fetch(url, { cache: "no-store" });
+  return res.ok ? res.json() : null;
+}
+
+let doc = null;
+try {
+  doc = await fetchPublishedFromKv();
+  if (doc) console.log("emit-v1-above-fold: using published content from Vercel KV");
+} catch (e) {
+  console.warn("emit-v1-above-fold: KV fetch failed, falling back to seed file:", e.message);
+}
+
+if (!doc) {
+  const { getVersion1InitialDocument } = await import("../src/templates/version-1-document.js");
+  doc = getVersion1InitialDocument();
+  console.log("emit-v1-above-fold: using local seed file");
+}
+
 const fullHtml = typeof doc?.html === "string" ? doc.html : "";
 
 const headerMatch = fullHtml.match(/<header class="v1-header"[^>]*>[\s\S]*?<\/header>/i);

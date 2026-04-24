@@ -19,7 +19,8 @@
     "test:e2e:update": "playwright test --update-snapshots",
     "assets:hero-lcp": "node scripts/generate-hero-lcp-asset.mjs",
     "lighthouse:home": "npx --yes lighthouse@12 http://127.0.0.1:4173/ --only-categories=performance --preset=desktop --output=html --output-path=lighthouse-home.html --chrome-flags=--headless=new --quiet",
-    "emit:v1-hero": "node scripts/emit-v1-hero-fragment.mjs"
+    "emit:v1-hero": "node scripts/emit-v1-hero-fragment.mjs",
+    "sync-seed": "dotenv -e .env.local -- node scripts/sync-seed.mjs"
   },
   "dependencies": {
     "@fontsource/dm-sans": "^5.2.8",
