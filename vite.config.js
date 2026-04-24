@@ -53,6 +53,38 @@ function v1AboveFoldPrerender() {
   };
 }
 
+/**
+ * Injects <link rel="preload"> for critical home-page fonts into index.html at build time,
+ * so the browser discovers them before any JS runs (earlier than JS-created preloads).
+ */
+function v1FontPreloads() {
+  const FONT_RE = /dm-sans-latin-(400|500)-normal|playfair-display-latin-900-normal/;
+  let fontHrefs = [];
+
+  return {
+    name: "v1-font-preloads",
+    apply: "build",
+    generateBundle(_, bundle) {
+      fontHrefs = Object.keys(bundle)
+        .filter(name => FONT_RE.test(name) && name.endsWith(".woff2"))
+        .map(name => `/${name}`);
+    },
+    transformIndexHtml: {
+      order: "post",
+      handler(html, ctx) {
+        if (!ctx.filename.endsWith("index.html")) return html;
+        if (!fontHrefs.length) return html;
+        const tags = fontHrefs.map(href => ({
+          tag: "link",
+          attrs: { rel: "preload", as: "font", type: "font/woff2", crossorigin: "", href },
+          injectTo: "head"
+        }));
+        return { html, tags };
+      }
+    }
+  };
+}
+
 function grapesManualChunk(id) {
   const n = id.replaceAll("\\", "/");
   if (n.includes("grapesjs-preset-webpage")) {
@@ -65,7 +97,7 @@ function grapesManualChunk(id) {
 }
 
 export default defineConfig({
-  plugins: [v1AboveFoldPrerender()],
+  plugins: [v1AboveFoldPrerender(), v1FontPreloads()],
   build: {
     // GrapesJS core minifies to ~1 MB; it is code-split from the builder entry; limit avoids noisy false positives.
     chunkSizeWarningLimit: 1200,

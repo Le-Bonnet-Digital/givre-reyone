@@ -224,6 +224,76 @@ export function runPageShell(deps) {
     }
   }
 
+  /**
+   * Called after Phase 1 (seed already rendered). Replaces below-fold content
+   * and updates header/hero only if the API version differs from what's visible.
+   * @param {string} apiHtml - full page HTML from the published API
+   */
+  function updateV1ShellFromApi(apiHtml) {
+    const root = document.getElementById("page-root");
+    const shell = document.getElementById("v1-main-prerender-shell");
+    if (!root || !shell) return;
+
+    // Update header only if changed
+    const currentHeader = root.querySelector("header.v1-header");
+    const apiHeaderEl = getFirstV1HeaderFromHtml(apiHtml);
+    if (currentHeader && apiHeaderEl) {
+      if (normalizeV1HeaderInnerMarkup(apiHeaderEl) !== normalizeV1HeaderInnerMarkup(currentHeader)) {
+        currentHeader.replaceWith(apiHeaderEl.cloneNode(true));
+      }
+    }
+
+    // Update hero only if changed
+    const currentHero = shell.querySelector("section.v1-hero");
+    const apiHeroEl = getFirstV1HeroFromHtml(apiHtml);
+    if (currentHero && apiHeroEl) {
+      if (normalizeV1HeroInnerMarkup(apiHeroEl) !== normalizeV1HeroInnerMarkup(currentHero)) {
+        currentHero.replaceWith(apiHeroEl.cloneNode(true));
+      }
+    }
+
+    // Replace below-fold content with API version
+    const stripped = stripFirstV1HeaderAndHeroFromHtml(apiHtml);
+    const wrap = document.createElement("div");
+    wrap.innerHTML = stripped;
+
+    // Remove non-header/non-shell direct children of root (e.g. footer from seed)
+    for (const child of [...root.children]) {
+      if (!child.matches?.("header.v1-header") && child !== shell) {
+        child.remove();
+      }
+    }
+
+    // Remove everything after the hero in the shell
+    const heroNode = shell.querySelector("section.v1-hero");
+    if (heroNode) {
+      let next = heroNode.nextSibling;
+      while (next) {
+        const toRemove = next;
+        next = next.nextSibling;
+        shell.removeChild(toRemove);
+      }
+    }
+
+    // Append API below-fold content
+    for (const child of [...wrap.children]) {
+      if (child.matches?.("main")) {
+        for (const mainChild of [...child.children]) {
+          shell.appendChild(mainChild);
+        }
+      } else {
+        root.appendChild(child);
+      }
+    }
+
+    if (isPageShellDebug()) {
+      tracePageShell("updateV1ShellFromApi", {
+        strippedLength: stripped?.length ?? 0,
+        apiHtmlLength: apiHtml?.length ?? 0
+      });
+    }
+  }
+
   async function mountPage() {
     const page = document.body.dataset.page || "";
     const template = getPageTemplate(page);
@@ -237,50 +307,66 @@ export function runPageShell(deps) {
     document.body.className = template.bodyClass;
     document.body.dataset.page = page;
 
-    const skipLoadingBanner = page === "version-1" && hasVersion1AboveFoldPrerender();
-    if (!skipLoadingBanner) {
+    const isV1Prerender = page === "version-1" && hasVersion1AboveFoldPrerender();
+
+    if (!isV1Prerender) {
       setLoadingState("Chargement...");
     }
 
+    // ── Phase 1: render full page from local seed immediately (zero network wait) ──
+    if (isV1Prerender) {
+      const seedDoc = preparePageDocument(page, template.initialDocument || null);
+      const seedHtml = seedDoc?.html || template.bodyHtml || "";
+      ensureCustomStyle(seedDoc?.css || "");
+      mountWithPrerenderedAboveFold(seedHtml, false);
+      setLoadingState("");
+      if (template.needsReveal) {
+        import("./reveal.js"); // non-blocking: start animations while API fetches
+      }
+    }
+
+    // ── Phase 2: fetch published API and update page if content differs ──
     let documentData = null;
     let publishedApiOk = false;
-    /** @type {{ source?: string; mode?: string; document?: unknown } | null} */
     let apiRaw = null;
     try {
       apiRaw = await fetchPublishedDocument(page);
       documentData = preparePageDocument(page, apiRaw?.document || null);
       publishedApiOk = Boolean(apiRaw?.document);
     } catch {
-      documentData = null;
-      publishedApiOk = false;
+      // Phase 1 seed already rendered; graceful degradation
     }
 
-    const fallbackDocument = preparePageDocument(page, template.initialDocument || null);
-    const fullFallbackHtml = fallbackDocument?.html || template.bodyHtml;
-    const preparedHtml = documentData?.html || fullFallbackHtml;
-    const css = documentData?.css || fallbackDocument?.css || "";
-
     if (isPageShellDebug()) {
-      tracePageShell("before mount", {
+      const seedDoc = preparePageDocument(page, template.initialDocument || null);
+      tracePageShell("api response", {
         page,
         apiSource: apiRaw?.source ?? "(fetch failed)",
         apiMode: apiRaw?.mode,
         publishedApiOk,
         hasDocumentData: Boolean(documentData),
-        preparedHtmlPreview: (preparedHtml || "").slice(0, 600),
-        cssLength: (css || "").length,
-        cssPreview: (css || "").slice(0, 2000)
+        preparedHtmlPreview: (documentData?.html || seedDoc?.html || "").slice(0, 600),
+        cssLength: (documentData?.css || "").length,
+        cssPreview: (documentData?.css || "").slice(0, 2000)
       });
     }
 
-    ensureCustomStyle(css);
-
-    if (page === "version-1" && hasVersion1AboveFoldPrerender()) {
-      mountWithPrerenderedAboveFold(preparedHtml, publishedApiOk);
-    } else {
-      root.innerHTML = preparedHtml;
+    if (isV1Prerender) {
+      if (publishedApiOk && documentData?.html) {
+        ensureCustomStyle(documentData.css || "");
+        updateV1ShellFromApi(documentData.html);
+      }
+      return;
     }
 
+    // ── Non-prerender path (unchanged for other pages) ──
+    const fallbackDocument = preparePageDocument(page, template.initialDocument || null);
+    const fullFallbackHtml = fallbackDocument?.html || template.bodyHtml;
+    const preparedHtml = documentData?.html || fullFallbackHtml;
+    const css = documentData?.css || fallbackDocument?.css || "";
+
+    ensureCustomStyle(css);
+    root.innerHTML = preparedHtml;
     setLoadingState("");
 
     if (template.needsReveal) {

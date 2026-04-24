@@ -20,7 +20,7 @@ export default async function handler(req, res) {
     if (mode === "published") {
       res.setHeader(
         "Cache-Control",
-        "public, max-age=60, s-maxage=120, stale-while-revalidate=86400"
+        "public, max-age=300, s-maxage=3600, stale-while-revalidate=86400"
       );
     } else {
       res.setHeader("Cache-Control", "no-store");
