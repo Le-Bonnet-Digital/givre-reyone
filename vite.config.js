@@ -10,45 +10,38 @@ function escapeCssForEmbeddedStyle(css) {
   return css.replace(/<\/style/gi, "\\3C /style");
 }
 
-function v1AboveFoldPrerender() {
+function v1PublishedHomepage() {
   return {
-    name: "v1-above-fold-prerender",
+    name: "v1-published-homepage",
     transformIndexHtml(html) {
       let out = html;
       const markerCss = "<!--V1_SEED_CUSTOM_CSS-->";
       if (out.includes(markerCss)) {
         const cssPath = join(__dirname, "src/fragments/v1-seed-custom.css");
-        let seedCss = "";
-        if (existsSync(cssPath)) {
-          seedCss = readFileSync(cssPath, "utf8");
-        } else {
-          console.warn(
-            "[v1-seed-custom-css] Missing",
-            cssPath,
-            "— run: node scripts/emit-v1-hero-fragment.mjs"
-          );
+        if (!existsSync(cssPath)) {
+          throw new Error(`[v1-seed-custom-css] Missing ${cssPath}. Run: node scripts/emit-v1-hero-fragment.mjs`);
         }
-        const escaped = escapeCssForEmbeddedStyle(seedCss);
+
+        const escaped = escapeCssForEmbeddedStyle(readFileSync(cssPath, "utf8"));
         out = out.replace(
           markerCss,
           `<style id="page-custom-css" data-v1-seed-css="1">\n${escaped}\n</style>`
         );
       }
 
-      if (!out.includes("<!--V1_ABOVE_FOLD_PRERENDER-->")) {
+      if (!out.includes("<!--V1_PUBLISHED_HOMEPAGE-->")) {
         return out;
       }
-      const fragmentPath = join(__dirname, "src/fragments/v1-above-fold-prerender.html");
+
+      const fragmentPath = join(__dirname, "src/fragments/v1-homepage-published.html");
       if (!existsSync(fragmentPath)) {
-        console.warn(
-          "[v1-above-fold-prerender] Missing",
-          fragmentPath,
-          "— run: node scripts/emit-v1-hero-fragment.mjs"
+        throw new Error(
+          `[v1-homepage-published] Missing ${fragmentPath}. Run: node scripts/emit-v1-hero-fragment.mjs`
         );
-        return out.replace("<!--V1_ABOVE_FOLD_PRERENDER-->", "");
       }
+
       const fragment = readFileSync(fragmentPath, "utf8").trim();
-      return out.replace("<!--V1_ABOVE_FOLD_PRERENDER-->", fragment);
+      return out.replace("<!--V1_PUBLISHED_HOMEPAGE-->", fragment);
     }
   };
 }
@@ -66,15 +59,15 @@ function v1FontPreloads() {
     apply: "build",
     generateBundle(_, bundle) {
       fontHrefs = Object.keys(bundle)
-        .filter(name => FONT_RE.test(name) && name.endsWith(".woff2"))
-        .map(name => `/${name}`);
+        .filter((name) => FONT_RE.test(name) && name.endsWith(".woff2"))
+        .map((name) => `/${name}`);
     },
     transformIndexHtml: {
       order: "post",
       handler(html, ctx) {
         if (!ctx.filename.endsWith("index.html")) return html;
         if (!fontHrefs.length) return html;
-        const tags = fontHrefs.map(href => ({
+        const tags = fontHrefs.map((href) => ({
           tag: "link",
           attrs: { rel: "preload", as: "font", type: "font/woff2", crossorigin: "", href },
           injectTo: "head"
@@ -97,7 +90,7 @@ function grapesManualChunk(id) {
 }
 
 export default defineConfig({
-  plugins: [v1AboveFoldPrerender(), v1FontPreloads()],
+  plugins: [v1PublishedHomepage(), v1FontPreloads()],
   build: {
     // GrapesJS core minifies to ~1 MB; it is code-split from the builder entry; limit avoids noisy false positives.
     chunkSizeWarningLimit: 1200,

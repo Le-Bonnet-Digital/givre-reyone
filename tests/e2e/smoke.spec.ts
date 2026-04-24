@@ -1,15 +1,19 @@
 import { expect, test } from "@playwright/test";
 
 test.describe("Smoke navigation", () => {
-  test("home inlines above-fold (header + hero) in initial HTML for LCP", async ({ page }) => {
+  test("home inlines published content in initial HTML without runtime shell fetch", async ({ page }) => {
     const response = await page.goto("/");
     const body = await response?.text();
-    expect(body).toContain("v1-header-prerender");
-    expect(body).toContain("v1-hero-prerender");
-    expect(body).toContain("v1-main-prerender-shell");
+    expect(body).toContain('class="v1-header"');
+    expect(body).toContain('class="v1-hero"');
+    expect(body).toContain('class="v1-section v1-section-product"');
+    expect(body).toContain('class="v1-section v1-section-contact"');
     expect(body).toContain('id="page-custom-css"');
     expect(body).toContain("hero-lcp-800.webp");
     expect(body).toContain("hero-lcp-400.webp");
+    expect(body).not.toContain("/api/page-content");
+    expect(body).not.toContain("public.blob.vercel-storage.com");
+    expect(body).not.toContain("page-shell-home");
   });
 
   test("home renders key sections and contact anchor", async ({ page }) => {
@@ -34,6 +38,7 @@ test.describe("Smoke navigation", () => {
     await expect(page.locator("#contact")).not.toContainText("Contacter sur WhatsApp (+262 693 10 39 08)");
     await expect(page.locator("#contact")).not.toContainText("Envoyer un email (contact@givre-reyone.re)");
     await expect(page.locator(".v1-hero picture img#ibh3cx")).toBeVisible();
+    await expect(page.locator(".v1-hero picture img#ibh3cx")).toHaveAttribute("src", "/hero-lcp-800.webp");
     await expect(page.locator('a[href="#contact"]')).toHaveCount(5);
     await expect(page.locator("footer .v1-legal-links")).toBeVisible();
     await expect(page.locator('footer .v1-legal-links a[href="/mentions-legales.html"]')).toBeVisible();
@@ -43,6 +48,19 @@ test.describe("Smoke navigation", () => {
 
     await page.click('a[href="#contact"]');
     await expect(page.locator("#contact")).toBeInViewport();
+  });
+
+  test("home avoids remote hero blob and runtime page-content requests", async ({ page }) => {
+    const requests: string[] = [];
+    page.on("request", (request) => {
+      requests.push(request.url());
+    });
+
+    await page.goto("/");
+    await page.waitForLoadState("networkidle");
+
+    expect(requests.some((url) => url.includes("/api/page-content"))).toBeFalsy();
+    expect(requests.some((url) => url.includes("public.blob.vercel-storage.com"))).toBeFalsy();
   });
 
   test("header background spans full viewport width", async ({ page }) => {

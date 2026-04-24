@@ -181,34 +181,31 @@ function refreshContactSection(html) {
   return root.innerHTML;
 }
 
-const HERO_PNG_URL =
-  "https://x1ayqv7wwavw0m6h.public.blob.vercel-storage.com/builder-assets/1776942961900-Logo_fond_transparent.png";
+const HERO_LCP_DEFAULT_SRC = "/hero-lcp-800.webp";
 const HERO_LCP_SRCSET = "/hero-lcp-400.webp 400w, /hero-lcp-800.webp 800w";
 const HERO_LCP_SIZES = "(max-width: 480px) 92vw, 420px";
 
-const HERO_LCP_PICTURE = `<picture class="v1-hero-picture"><source srcset="${HERO_LCP_SRCSET}" sizes="${HERO_LCP_SIZES}" type="image/webp" /><img id="ibh3cx" src="${HERO_PNG_URL}" alt="Logo Givré Réyoné" width="400" height="400" loading="eager" fetchpriority="high" decoding="async" /></picture>`;
-
-const HERO_LOGO_SRC_RE =
-  "https:\\/\\/x1ayqv7wwavw0m6h\\.public\\.blob\\.vercel-storage\\.com\\/builder-assets\\/1776942961900-Logo_fond_transparent\\.png";
+const HERO_LCP_PICTURE = `<picture class="v1-hero-picture"><source srcset="${HERO_LCP_SRCSET}" sizes="${HERO_LCP_SIZES}" type="image/webp" /><img id="ibh3cx" src="${HERO_LCP_DEFAULT_SRC}" alt="Logo Givré Réyoné" width="400" height="400" loading="eager" fetchpriority="high" decoding="async" /></picture>`;
 
 /**
- * LCP: replace oversized remote PNG with local WebP (picture + PNG fallback) and priority hints.
- * Idempotent if picture+webp already present. Tolerates GrapesJS attribute order and `>` or `/>`.
+ * LCP: replace any existing hero picture or legacy hero image with the locally generated optimized assets.
  */
 export function optimizeHeroLcpImage(html) {
   if (typeof html !== "string" || !html) {
     return html;
   }
-  if (html.includes("/hero-lcp-800.webp") && html.includes("v1-hero-picture")) {
-    return html;
+
+  const pictureRe =
+    /<picture\b[^>]*class="v1-hero-picture"[^>]*>[\s\S]*?<img\b(?=[^>]*\bid\s*=\s*"ibh3cx")[^>]*(?:\/>|>)[\s\S]*?<\/picture>/i;
+  if (pictureRe.test(html)) {
+    return html.replace(pictureRe, HERO_LCP_PICTURE);
   }
-  const reFlexible = new RegExp(
-    `<img\\b(?=[^>]*\\bid\\s*=\\s*"ibh3cx")(?=[^>]*\\bsrc\\s*=\\s*"${HERO_LOGO_SRC_RE}")[^>]*(?:\\/>|>)`,
-    "i"
-  );
+
+  const reFlexible = /<img\b(?=[^>]*\bid\s*=\s*"ibh3cx")[^>]*(?:\/>|>)/i;
   if (reFlexible.test(html)) {
     return html.replace(reFlexible, HERO_LCP_PICTURE);
   }
+
   return html;
 }
 
