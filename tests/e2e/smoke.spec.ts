@@ -25,6 +25,14 @@ test.describe("Smoke navigation", () => {
     await expect(page.locator(".v1-section-offre")).toBeVisible();
     await expect(page.locator(".v1-section-objections")).toBeVisible();
     await expect(page.locator("#contact")).toBeVisible();
+    await expect(page.locator("#contact .v1-contact-button-primary")).toHaveText("Contacter sur WhatsApp");
+    await expect(page.locator("#contact .v1-contact-meta")).toContainText("+262 693 10 39 08");
+    await expect(page.locator("#contact .v1-contact-link")).toHaveCount(2);
+    await expect(page.locator('#contact .v1-contact-link[href^="mailto:"]')).toHaveText("Envoyer un email");
+    await expect(page.locator('#contact .v1-contact-link[href*="instagram.com"]')).toHaveText("Voir Instagram");
+    await expect(page.locator("#contact .v1-contact-fallback")).toContainText("contact@givre-reyone.re");
+    await expect(page.locator("#contact")).not.toContainText("Contacter sur WhatsApp (+262 693 10 39 08)");
+    await expect(page.locator("#contact")).not.toContainText("Envoyer un email (contact@givre-reyone.re)");
     await expect(page.locator(".v1-hero picture img#ibh3cx")).toBeVisible();
     await expect(page.locator('a[href="#contact"]')).toHaveCount(5);
     await expect(page.locator("footer .v1-legal-links")).toBeVisible();

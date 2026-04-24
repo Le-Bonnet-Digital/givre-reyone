@@ -9,15 +9,20 @@ const CONTACT_SECTION_HTML = `
     <p class="v1-form-sub">Une réponse rapide pour vos réservations et demandes d'information.</p>
     <div class="v1-contact-card">
       <a class="v1-contact-button v1-contact-button-primary" href="https://wa.me/262693103908" target="_blank" rel="noopener noreferrer">
-        Contacter sur WhatsApp (+262 693 10 39 08)
+        Contacter sur WhatsApp
       </a>
+      <p class="v1-contact-meta">
+        Le plus rapide : un message WhatsApp au
+        <a href="https://wa.me/262693103908" target="_blank" rel="noopener noreferrer">+262 693 10 39 08</a>
+        pour réserver une date ou demander un devis.
+      </p>
       <div class="v1-contact-links" aria-label="Canaux alternatifs">
         <a class="v1-contact-link" href="mailto:contact@givre-reyone.re">Envoyer un email</a>
         <a class="v1-contact-link" href="https://www.instagram.com/givre_reyone?igsh=OTAybGIwNmgxNXlh" target="_blank" rel="noopener noreferrer">Voir Instagram</a>
       </div>
       <p class="v1-contact-fallback">
-        Si besoin, écrivez-nous aussi à
-        <a href="mailto:contact@givre-reyone.re"><strong>contact@givre-reyone.re</strong></a>.
+        Si un bouton ne s'ouvre pas sur votre appareil, écrivez-nous à
+        <a href="mailto:contact@givre-reyone.re">contact@givre-reyone.re</a>.
       </p>
     </div>
   </div>
@@ -54,6 +59,17 @@ function replaceLegacyFormSectionRegex(html) {
   const withAnchors = replaceFormAnchors(html);
   return withAnchors.replace(
     /<section class="v1-section v1-section-form" id="form">[\s\S]*?<\/section>/,
+    CONTACT_SECTION_HTML
+  );
+}
+
+function refreshContactSectionRegex(html) {
+  if (typeof html !== "string" || !html || !html.includes('id="contact"')) {
+    return html;
+  }
+
+  return html.replace(
+    /<section\b[^>]*id="contact"[^>]*>[\s\S]*?<\/section>/i,
     CONTACT_SECTION_HTML
   );
 }
@@ -135,6 +151,36 @@ function replaceLegacyFormSection(html) {
   return root.innerHTML;
 }
 
+function refreshContactSection(html) {
+  if (typeof html !== "string" || !html || typeof DOMParser === "undefined") {
+    return refreshContactSectionRegex(html);
+  }
+
+  const parser = new DOMParser();
+  const document = parser.parseFromString(`<main id="v1-transform-root">${html}</main>`, "text/html");
+  const root = document.querySelector("#v1-transform-root");
+
+  if (!root) {
+    return refreshContactSectionRegex(html);
+  }
+
+  const existingContact = root.querySelector("#contact");
+  if (!existingContact) {
+    return html;
+  }
+
+  const target = existingContact.closest("section") || existingContact;
+  const contactTemplate = document.createElement("template");
+  contactTemplate.innerHTML = CONTACT_SECTION_HTML;
+  const contactSection = contactTemplate.content.firstElementChild;
+
+  if (contactSection) {
+    target.replaceWith(contactSection);
+  }
+
+  return root.innerHTML;
+}
+
 const HERO_PNG_URL =
   "https://x1ayqv7wwavw0m6h.public.blob.vercel-storage.com/builder-assets/1776942961900-Logo_fond_transparent.png";
 const HERO_LCP_SRCSET = "/hero-lcp-400.webp 400w, /hero-lcp-800.webp 800w";
@@ -208,6 +254,15 @@ const MIGRATIONS = [
       return {
         ...documentData,
         html: replaceLegacyFormSection(documentData.html || "")
+      };
+    }
+  },
+  {
+    id: "v1-contact-ux-refresh",
+    apply(documentData) {
+      return {
+        ...documentData,
+        html: refreshContactSection(documentData.html || "")
       };
     }
   },
