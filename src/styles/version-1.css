@@ -181,7 +181,7 @@ body.version-one {
   width: min(100%, 420px);
   aspect-ratio: 1;
   border-radius: 50%;
-  background: var(--v1-jaune);
+  background: var(--v1-blanc);
   display: flex;
   align-items: center;
   justify-content: center;
