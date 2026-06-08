@@ -8,28 +8,52 @@ import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 
 const GITHUB_API = "https://api.github.com";
-const GITHUB_OWNER = process.env.GITHUB_OWNER || "Le-Bonnet-Digital";
-const GITHUB_REPO = process.env.GITHUB_REPO || "givre-reyone";
-const GITHUB_BRANCH = process.env.GITHUB_BRANCH || "main";
-const GITHUB_TOKEN = process.env.GITHUB_TOKEN || "";
 
-function getAuthHeader() {
-  if (!GITHUB_TOKEN) {
+function readEnv(runtimeEnv, key, fallback = "") {
+  if (runtimeEnv && typeof runtimeEnv[key] === "string" && runtimeEnv[key]) {
+    return runtimeEnv[key];
+  }
+  if (typeof process !== "undefined" && process?.env?.[key]) {
+    return process.env[key];
+  }
+  return fallback;
+}
+
+function textToBase64(value) {
+  return Buffer.from(value).toString("base64");
+}
+
+function base64ToText(value) {
+  return Buffer.from(value, "base64").toString("utf-8");
+}
+
+function getConfig(runtimeEnv) {
+  return {
+    owner: readEnv(runtimeEnv, "GITHUB_OWNER", "Le-Bonnet-Digital"),
+    repo: readEnv(runtimeEnv, "GITHUB_REPO", "givre-reyone"),
+    branch: readEnv(runtimeEnv, "GITHUB_BRANCH", "main"),
+    token: readEnv(runtimeEnv, "GITHUB_TOKEN", "")
+  };
+}
+
+function getAuthHeader(runtimeEnv) {
+  const config = getConfig(runtimeEnv);
+  if (!config.token) {
     return {};
   }
-  return { Authorization: `Bearer ${GITHUB_TOKEN}` };
+  return { Authorization: `Bearer ${config.token}` };
 }
 
 function getLocalPagePath(page) {
   return new URL(`../../src/data/pages/${page}.json`, import.meta.url);
 }
 
-async function githubFetch(path, options = {}) {
+async function githubFetch(path, runtimeEnv, options = {}) {
   const url = `${GITHUB_API}${path}`;
   const headers = {
     Accept: "application/vnd.github+json",
     "X-GitHub-Api-Version": "2022-11-28",
-    ...getAuthHeader(),
+    ...getAuthHeader(runtimeEnv),
     ...options.headers
   };
 
@@ -55,17 +79,19 @@ async function githubFetch(path, options = {}) {
  * Get file content from GitHub
  * @returns {{ content: string, sha: string }}
  */
-export async function getPageFromGit(page) {
-  if (!GITHUB_TOKEN) {
+export async function getPageFromGit(page, runtimeEnv) {
+  const config = getConfig(runtimeEnv);
+  if (!config.token) {
     throw new Error("GITHUB_TOKEN not configured");
   }
 
   try {
     const response = await githubFetch(
-      `/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/src/data/pages/${page}.json?ref=${GITHUB_BRANCH}`
+      `/repos/${config.owner}/${config.repo}/contents/src/data/pages/${page}.json?ref=${config.branch}`,
+      runtimeEnv
     );
 
-    const content = Buffer.from(response.content, "base64").toString("utf-8");
+    const content = base64ToText(response.content);
     return {
       document: JSON.parse(content),
       sha: response.sha,
@@ -104,14 +130,15 @@ export async function getPageFromLocalRepo(page) {
  * @param message - commit message
  * @returns {{ sha: string, committed: boolean }}
  */
-export async function commitPageToGit(page, document, currentSha, message) {
-  if (!GITHUB_TOKEN) {
+export async function commitPageToGit(page, document, currentSha, message, runtimeEnv) {
+  const config = getConfig(runtimeEnv);
+  if (!config.token) {
     throw new Error("GITHUB_TOKEN not configured");
   }
 
   try {
     // Get current SHA from GitHub
-    const current = await getPageFromGit(page);
+    const current = await getPageFromGit(page, runtimeEnv);
 
     // Verify no concurrent modification
     if (current.sha && current.sha !== currentSha) {
@@ -122,19 +149,20 @@ export async function commitPageToGit(page, document, currentSha, message) {
     }
 
     // Prepare payload
-    const fileContent = Buffer.from(JSON.stringify(document, null, 2)).toString("base64");
+    const fileContent = textToBase64(JSON.stringify(document, null, 2));
     const sha = current?.sha;
 
     const payload = {
       message,
       content: fileContent,
-      branch: GITHUB_BRANCH,
+      branch: config.branch,
       ...(sha && { sha })
     };
 
     // Commit
     const response = await githubFetch(
-      `/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/src/data/pages/${page}.json`,
+      `/repos/${config.owner}/${config.repo}/contents/src/data/pages/${page}.json`,
+      runtimeEnv,
       {
         method: "PUT",
         body: JSON.stringify(payload)
@@ -156,4 +184,6 @@ export async function commitPageToGit(page, document, currentSha, message) {
   }
 }
 
-export { GITHUB_OWNER, GITHUB_REPO, GITHUB_BRANCH };
+export function getGitStoreConfig(runtimeEnv) {
+  return getConfig(runtimeEnv);
+}

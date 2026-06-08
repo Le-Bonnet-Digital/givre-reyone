@@ -19,6 +19,43 @@ async function ensureGrapesModules() {
 
 const STORAGE_KEY = "gr_admin_token";
 const LAST_PAGE_KEY = "gr_admin_last_page";
+const API_BASE_STORAGE_KEY = "gr_api_base";
+
+function normalizeApiBase(value) {
+  return String(value || "").trim().replace(/\/$/, "");
+}
+
+function detectApiBase() {
+  const url = new URL(window.location.href);
+  const fromQuery = normalizeApiBase(url.searchParams.get("api_base"));
+  if (fromQuery) {
+    localStorage.setItem(API_BASE_STORAGE_KEY, fromQuery);
+    return fromQuery;
+  }
+
+  const fromStorage = normalizeApiBase(localStorage.getItem(API_BASE_STORAGE_KEY));
+  if (fromStorage) {
+    return fromStorage;
+  }
+
+  const fromMeta = normalizeApiBase(document.querySelector('meta[name="gr-api-base"]')?.content || "");
+  if (fromMeta) {
+    return fromMeta;
+  }
+
+  const fromGlobal = normalizeApiBase(window.__GR_API_BASE__ || "");
+  if (fromGlobal) {
+    return fromGlobal;
+  }
+
+  return normalizeApiBase(import.meta.env.VITE_ADMIN_API_BASE || "");
+}
+
+const API_BASE = detectApiBase();
+
+function apiUrl(path) {
+  return API_BASE ? `${API_BASE}${path}` : path;
+}
 
 const state = {
   token: "",
@@ -72,7 +109,7 @@ function redirectToLogin() {
 }
 
 async function ping(token) {
-  const response = await fetch("/api/admin/ping", {
+  const response = await fetch(apiUrl("/api/admin/ping"), {
     method: "GET",
     headers: {
       Authorization: `Bearer ${token}`
@@ -108,7 +145,7 @@ function authHeaders() {
 }
 
 async function fetchWorkingDocument(page) {
-  const response = await requestJson(`/api/page-content?page=${encodeURIComponent(page)}&mode=draft`);
+  const response = await requestJson(apiUrl(`/api/page-content?page=${encodeURIComponent(page)}&mode=draft`));
   // Store SHA for conflict detection on publish
   if (response?.sha) {
     state.currentSha = response.sha;
@@ -117,7 +154,7 @@ async function fetchWorkingDocument(page) {
 }
 
 async function saveDraft(page, document) {
-  return requestJson("/api/admin/page-content/save-draft", {
+  return requestJson(apiUrl("/api/admin/page-content/save-draft"), {
     method: "POST",
     headers: authHeaders(),
     body: JSON.stringify({ page, document })
@@ -125,7 +162,7 @@ async function saveDraft(page, document) {
 }
 
 async function publishPage(page, document) {
-  const response = await fetch("/api/admin/page-content/publish", {
+  const response = await fetch(apiUrl("/api/admin/page-content/publish"), {
     method: "POST",
     headers: authHeaders(),
     body: JSON.stringify({ 
@@ -157,7 +194,7 @@ async function publishPage(page, document) {
 }
 
 async function resetDraft(page) {
-  return requestJson("/api/admin/page-content/reset", {
+  return requestJson(apiUrl("/api/admin/page-content/reset"), {
     method: "POST",
     headers: authHeaders(),
     body: JSON.stringify({ page })
@@ -165,7 +202,7 @@ async function resetDraft(page) {
 }
 
 async function uploadAsset(file) {
-  const response = await fetch(`/api/admin/assets/upload?filename=${encodeURIComponent(file.name)}`, {
+  const response = await fetch(apiUrl(`/api/admin/assets/upload?filename=${encodeURIComponent(file.name)}`), {
     method: "POST",
     headers: {
       Authorization: `Bearer ${state.token}`,
@@ -558,14 +595,15 @@ async function connect(token) {
 
 async function handleSaveDraft() {
   if (!state.editor) return;
-  setEditorStatus("Validation du draft...");
+  setEditorStatus("Sauvegarde du draft...");
   const rawDocument = buildDocumentFromEditor();
   const convergedDocument = preparePageDocument(state.currentPage, rawDocument) || rawDocument;
   // Validate structure
   if (!convergedDocument.html) {
     throw new Error("Invalid document: missing HTML");
   }
-  setEditorStatus(`Draft valide · pret a etre publie`);
+  await saveDraft(state.currentPage, convergedDocument);
+  setEditorStatus("Draft sauvegarde.");
   return convergedDocument;
 }
 

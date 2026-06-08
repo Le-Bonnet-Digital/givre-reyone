@@ -1,7 +1,6 @@
-import { put } from "@vercel/blob";
 import { isAdminTokenValid } from "../../_lib/auth.mjs";
 import { readBuffer } from "../../_lib/body.mjs";
-import { blobEnabled } from "../../_lib/store.mjs";
+import { blobEnabled, uploadBuilderAsset } from "../../_lib/store.mjs";
 
 function safeName(input) {
   const base = String(input || "upload")
@@ -28,7 +27,9 @@ export default async function handler(req, res) {
     return;
   }
 
-  if (!blobEnabled()) {
+  const runtimeEnv = req.cf?.env || req.__cloudflareEnv;
+
+  if (!blobEnabled(runtimeEnv)) {
     res.statusCode = 503;
     res.end(JSON.stringify({ ok: false, error: "blob_not_configured" }));
     return;
@@ -48,13 +49,9 @@ export default async function handler(req, res) {
   }
 
   try {
-    const pathname = `builder-assets/${Date.now()}-${filename}`;
-    const result = await put(pathname, data, {
-      access: "public",
-      contentType
-    });
+    const result = await uploadBuilderAsset(filename, data, contentType, runtimeEnv);
     res.statusCode = 200;
-    res.end(JSON.stringify({ ok: true, url: result.url, pathname: result.pathname }));
+    res.end(JSON.stringify({ ok: true, url: result.url, pathname: result.pathname, storage: runtimeEnv?.BUILDER_R2 ? "r2" : "blob" }));
   } catch {
     res.statusCode = 500;
     res.end(JSON.stringify({ ok: false, error: "upload_failed" }));

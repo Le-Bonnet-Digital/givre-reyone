@@ -1,0 +1,22 @@
+---
+description: "Force un workflow plan -> critique -> révision avant implémentation sur les sujets non triviaux"
+alwaysApply: true
+---
+
+- Pour toute tâche non triviale, commencer par un plan structuré.
+- Le plan doit inclure :
+  - objectif
+  - hypothèses
+  - impacts
+  - découpage des étapes
+  - risques
+  - stratégie de validation
+- Avant implémentation, demander une passe de critique :
+  - /critic-product
+  - /critic-tech
+- Après critique, produire un plan révisé avec :
+  - objections retenues
+  - objections rejetées
+  - justification
+- Ne pas implémenter tant que le plan n'est pas suffisamment clair.ok
+pook

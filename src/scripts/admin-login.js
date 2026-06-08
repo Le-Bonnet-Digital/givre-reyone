@@ -1,4 +1,41 @@
 const STORAGE_KEY = "gr_admin_token";
+const API_BASE_STORAGE_KEY = "gr_api_base";
+
+function normalizeApiBase(value) {
+  return String(value || "").trim().replace(/\/$/, "");
+}
+
+function detectApiBase() {
+  const url = new URL(window.location.href);
+  const fromQuery = normalizeApiBase(url.searchParams.get("api_base"));
+  if (fromQuery) {
+    localStorage.setItem(API_BASE_STORAGE_KEY, fromQuery);
+    return fromQuery;
+  }
+
+  const fromStorage = normalizeApiBase(localStorage.getItem(API_BASE_STORAGE_KEY));
+  if (fromStorage) {
+    return fromStorage;
+  }
+
+  const fromMeta = normalizeApiBase(document.querySelector('meta[name="gr-api-base"]')?.content || "");
+  if (fromMeta) {
+    return fromMeta;
+  }
+
+  const fromGlobal = normalizeApiBase(window.__GR_API_BASE__ || "");
+  if (fromGlobal) {
+    return fromGlobal;
+  }
+
+  return normalizeApiBase(import.meta.env.VITE_ADMIN_API_BASE || "");
+}
+
+const API_BASE = detectApiBase();
+
+function apiUrl(path) {
+  return API_BASE ? `${API_BASE}${path}` : path;
+}
 
 function setStatus(text) {
   const status = document.getElementById("admin-status");
@@ -8,7 +45,7 @@ function setStatus(text) {
 }
 
 async function ping(token) {
-  const response = await fetch("/api/admin/ping", {
+  const response = await fetch(apiUrl("/api/admin/ping"), {
     method: "GET",
     headers: {
       Authorization: `Bearer ${token}`
@@ -49,7 +86,7 @@ function redirectToBuilder() {
 }
 
 function setApiUnavailableStatus() {
-  setStatus("Service admin indisponible ici. Lance `npm run dev:vercel` puis ouvre l'URL affichee.");
+  setStatus("Service admin indisponible. Verifie l'URL API Cloudflare et recharge.");
 }
 
 document.getElementById("admin-login-form")?.addEventListener("submit", async (event) => {

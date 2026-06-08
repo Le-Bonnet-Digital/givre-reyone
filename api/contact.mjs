@@ -170,6 +170,7 @@ async function sendViaBrevo(payload) {
 }
 
 export default async function handler(req, res) {
+  const runtimeEnv = req.cf?.env || req.__cloudflareEnv;
   if (req.method !== "POST") {
     res.setHeader("Allow", "POST");
     sendJson(res, 405, { ok: false, message: "Method not allowed." });
@@ -208,7 +209,8 @@ export default async function handler(req, res) {
     const rateLimit = await enforceRateLimit(req, {
       namespace: "contact:v1",
       limit: 5,
-      windowSeconds: 3600
+      windowSeconds: 3600,
+      runtimeEnv
     });
 
     if (!rateLimit.allowed) {

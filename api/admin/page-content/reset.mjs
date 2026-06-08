@@ -5,6 +5,7 @@ import { blobEnabled, isAllowedPage, kvEnabled, resetDraftDocument } from "../..
 export default async function handler(req, res) {
   res.setHeader("Content-Type", "application/json; charset=utf-8");
   res.setHeader("Cache-Control", "no-store");
+  const runtimeEnv = req.cf?.env || req.__cloudflareEnv;
 
   if (!isAdminTokenValid(req)) {
     res.statusCode = 401;
@@ -34,14 +35,14 @@ export default async function handler(req, res) {
     return;
   }
 
-  if (!kvEnabled()) {
+  if (!kvEnabled(runtimeEnv)) {
     res.statusCode = 503;
-    res.end(JSON.stringify({ ok: false, error: "kv_not_configured", kvEnabled: false, blobEnabled: blobEnabled() }));
+    res.end(JSON.stringify({ ok: false, error: "kv_not_configured", kvEnabled: false, blobEnabled: blobEnabled(runtimeEnv) }));
     return;
   }
 
   try {
-    const result = await resetDraftDocument(page);
+    const result = await resetDraftDocument(page, runtimeEnv);
     res.statusCode = 200;
     res.end(JSON.stringify({ ok: true, page, draft: result.draft, published: result.published }));
   } catch (error) {

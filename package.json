@@ -9,7 +9,10 @@
   "scripts": {
     "dev": "node scripts/emit-v1-hero-fragment.mjs && vite",
     "dev:vercel": "node scripts/emit-v1-hero-fragment.mjs && npx dotenv -e .env.local -- npx vercel dev",
+    "dev:cloudflare": "node scripts/emit-v1-hero-fragment.mjs && npx dotenv -e .env.local -- wrangler dev",
     "build": "node scripts/emit-v1-hero-fragment.mjs && vite build",
+    "deploy:cloudflare": "wrangler deploy",
+    "cf:migrate:data": "node scripts/migrate-cloudflare-storage.mjs",
     "preview": "vite preview",
     "backfill:git-pages": "node scripts/backfill-git-pages.mjs",
     "backfill:git-pages:write": "node scripts/backfill-git-pages.mjs --write",
@@ -37,6 +40,7 @@
     "@playwright/test": "^1.59.1",
     "dotenv-cli": "^11.0.0",
     "sharp": "^0.34.5",
-    "vite": "^8.0.10"
+    "vite": "^8.0.10",
+    "wrangler": "^4.14.1"
   }
 }

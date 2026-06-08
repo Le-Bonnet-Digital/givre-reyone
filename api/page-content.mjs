@@ -2,10 +2,13 @@ import { isAllowedPage } from "./_lib/store.mjs";
 import { getPageFromGit, getPageFromLocalRepo } from "./_lib/git-store.mjs";
 
 function shouldReadLocalWorkingTree() {
+  if (typeof process === "undefined") {
+    return false;
+  }
   return process.env.NODE_ENV !== "production";
 }
 
-async function loadPageDocument(page) {
+async function loadPageDocument(page, runtimeEnv) {
   if (shouldReadLocalWorkingTree()) {
     const local = await getPageFromLocalRepo(page);
     if (local?.document) {
@@ -13,12 +16,13 @@ async function loadPageDocument(page) {
     }
   }
 
-  const remote = await getPageFromGit(page);
+  const remote = await getPageFromGit(page, runtimeEnv);
   return { ...remote, source: "git" };
 }
 
 export default async function handler(req, res) {
   res.setHeader("Content-Type", "application/json; charset=utf-8");
+  const runtimeEnv = req.cf?.env || req.__cloudflareEnv;
 
   try {
     const url = new URL(req.url, "http://localhost");
@@ -33,7 +37,7 @@ export default async function handler(req, res) {
     }
 
     // Load from Git (source of truth)
-    const { document, sha, source } = await loadPageDocument(page);
+    const { document, sha, source } = await loadPageDocument(page, runtimeEnv);
 
     if (!document) {
       res.setHeader("Cache-Control", "no-store");

@@ -1,0 +1,31 @@
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "givre-reyone-api",
+	"main": "worker.mjs",
+	"compatibility_date": "2026-04-28",
+	"compatibility_flags": [
+		"nodejs_compat"
+	],
+	"workers_dev": true,
+	"vars": {
+		"GITHUB_OWNER": "Le-Bonnet-Digital",
+		"GITHUB_REPO": "givre-reyone",
+		"GITHUB_BRANCH": "main",
+		"R2_PUBLIC_BASE_URL": "",
+		"CORS_ALLOWED_ORIGINS": "https://givre-reyone.re,https://www.givre-reyone.re,https://givre-reyone.com,https://www.givre-reyone.com"
+	},
+	"kv_namespaces": [
+		{
+			"binding": "BUILDER_KV",
+			"id": "5985f942104141e084cd69852832eca4",
+			"preview_id": "a86b08e3e82947349bca92e43795c2b7"
+		}
+	],
+	"r2_buckets": [
+		{
+			"binding": "BUILDER_R2",
+			"bucket_name": "givre-reyone-builder-assets",
+			"preview_bucket_name": "givre-reyone-builder-assets-preview"
+		}
+	]
+}

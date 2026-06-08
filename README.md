@@ -1,5 +1,7 @@
 # Givre Reyone
 
+> **Design system** : consulter `docs/design-system.md` AVANT de créer tout composant UI (tokens, composants et patterns validés y sont inventoriés). Ne pas reconstruire ce qui y figure déjà.
+
 ## Source de vérité opérationnelle
 
 La vérité opérationnelle du site est la **dernière version publiée/buildée validée**.
@@ -35,6 +37,19 @@ Avant toute modification (Builder ou local), toujours récupérer l'état le plu
 ## Où lire la procédure complète
 
 Voir `docs/content-workflow.md`.
+
+## Runtime Cloudflare (admin/builder)
+
+Migration en cours vers Cloudflare Workers + KV + R2 (sans Supabase).
+
+Commandes:
+
+- `npm run dev:cloudflare` : demarre le runtime Worker local.
+- `npm run deploy:cloudflare` : deploie le Worker.
+- `npm run cf:migrate:data` : simulation migration KV/R2.
+- `npm run cf:migrate:data -- --write` : migration effective KV/R2.
+
+Procedure detaillee: `docs/cloudflare-migration.md`.
 
 ## Validation UX/UI automatisée (local)
 
