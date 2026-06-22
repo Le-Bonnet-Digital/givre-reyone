@@ -1,5 +1,5 @@
 import sharp from "sharp";
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { access, mkdir, readFile, writeFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { dirname, join, resolve } from "node:path";
 
@@ -82,17 +82,50 @@ async function readSourceBuffer(root, source) {
   return readFile(localPath);
 }
 
+async function listExistingHeroOutputs(outDir) {
+  const outputs = [];
+  for (const spec of HERO_ASSET_SPECS) {
+    const outputPath = join(outDir, spec.fileName);
+    try {
+      await access(outputPath);
+    } catch {
+      return null;
+    }
+    outputs.push(outputPath);
+  }
+  return outputs;
+}
+
 export async function generateHeroAssets(root, documentSource) {
   const heroSource = extractHeroSourceFromHtml(documentSource?.html || "");
-  const inputBuffer = await readSourceBuffer(root, heroSource);
+  const outDir = join(root, "public");
+  await mkdir(outDir, { recursive: true });
+
+  let inputBuffer;
+  try {
+    inputBuffer = await readSourceBuffer(root, heroSource);
+  } catch (error) {
+    // Offline / network-restricted fallback: when a remote hero source is
+    // unreachable but the optimized assets were already generated, reuse them
+    // so the build (and `wrangler dev`) stays runnable without that network.
+    const isRemoteSource = /^https?:\/\//i.test(heroSource);
+    if (isRemoteSource) {
+      const existing = await listExistingHeroOutputs(outDir);
+      if (existing) {
+        console.warn(
+          `emit-v1-homepage: hero source unreachable (${error?.message || error}); reusing existing public/${HERO_ASSET_SPECS.map((s) => s.fileName).join(", public/")}`
+        );
+        return { heroSource, outputs: existing, metadata: null, reusedExisting: true };
+      }
+    }
+    throw error;
+  }
+
   const metadata = await sharp(inputBuffer).metadata();
 
   if (!metadata.width || !metadata.height) {
     throw new Error("hero_source_not_an_image");
   }
-
-  const outDir = join(root, "public");
-  await mkdir(outDir, { recursive: true });
 
   const outputs = [];
   for (const spec of HERO_ASSET_SPECS) {

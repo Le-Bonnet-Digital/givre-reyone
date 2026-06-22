@@ -19,6 +19,7 @@
     "test:e2e": "playwright test",
     "test:e2e:smoke": "playwright test tests/e2e/smoke.spec.ts tests/e2e/ux-ui-guards.spec.ts",
     "test:e2e:builder": "playwright test tests/e2e/builder.spec.ts",
+    "test:e2e:cloudflare": "playwright test --config playwright.cloudflare.config.ts",
     "test:e2e:visual": "playwright test tests/e2e/visual-regression.spec.ts",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:update": "playwright test --update-snapshots",

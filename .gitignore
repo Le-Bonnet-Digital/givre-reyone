@@ -3,6 +3,8 @@ dist/
 
 .vercel
 .env.local
+.dev.vars
+.wrangler/
 .cursor-backup-*/
 playwright-report/
 test-results/
