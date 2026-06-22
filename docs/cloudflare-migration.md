@@ -20,11 +20,12 @@
 ## Ordre de bascule recommande
 
 1. `npm run dev:cloudflare` pour valider localement les routes API.
-2. `npm run cf:migrate:data` (dry-run).
-3. `npm run cf:migrate:data -- --write` pour migrer les pages vers KV/R2.
-4. `npm run deploy:cloudflare` sur environnement preview.
-5. Executer E2E builder + smoke sur l'URL preview.
-6. Promouvoir en production.
+2. `npm run test:e2e:cloudflare` pour valider la convergence admin/builder sur le runtime Worker (voir ci-dessous).
+3. `npm run cf:migrate:data` (dry-run).
+4. `npm run cf:migrate:data -- --write` pour migrer les pages vers KV/R2.
+5. `npm run deploy:cloudflare` sur environnement preview.
+6. Executer E2E builder + smoke sur l'URL preview.
+7. Promouvoir en production.
 
 ## Plan de rollback
 
@@ -39,3 +40,57 @@
 - `Save Draft` persiste un pointeur KV `builder:<page>`.
 - `Publish` commit bien vers GitHub avec detection de conflits SHA.
 - Upload asset retourne une URL R2 (ou `r2://` sans base publique configuree).
+
+### Suite E2E automatisee (runtime Worker)
+
+`npm run test:e2e:cloudflare` execute une suite Playwright dediee
+(`playwright.cloudflare.config.ts` + `tests/e2e-cloudflare/worker.spec.ts`)
+qui demarre un `wrangler dev` local (Miniflare, bindings preview
+`BUILDER_KV` / `BUILDER_R2` simules localement, sans secret ni acces
+production) et exerce les routes admin de `worker.mjs` :
+
+- `ping` : 401 sans token ; `ok/kvEnabled/blobEnabled = true` avec token.
+- `save-draft` : pointeur draft persiste vers R2 (`r2://builder/<page>/draft-*.json`) ;
+  validation `400 invalid_payload` ; `401` sans token.
+- `reset` : `draft` remis a `null`.
+- `upload` : `200` avec `storage:"r2"` et URL `r2://builder-assets/...`.
+- `load` / `publish` : contrats d'auth (`401`) et de validation (`400`)
+  toujours verifies ; le round-trip Git complet n'est exerce que si
+  `GITHUB_TOKEN` est fourni a l'environnement.
+
+Variables d'environnement utiles :
+
+- `E2E_CLOUDFLARE_BASE_URL` : si defini, la suite cible cette URL (Worker
+  deja deploye) et ne demarre PAS `wrangler dev` (voir "Tester en ligne").
+- `E2E_ADMIN_TOKEN` (ou `ADMIN_TOKEN`) : token admin injecte dans le Worker
+  via `--var` ; un defaut deterministe est utilise si absent. En mode URL
+  externe, il doit correspondre au secret `ADMIN_TOKEN` du Worker deploye.
+- `GITHUB_TOKEN` : optionnel ; active le test de round-trip Git `load`+`publish`.
+- `E2E_CLOUDFLARE_PORT` : port du `wrangler dev` local (defaut `8788`).
+- `E2E_SKIP_CLOUDFLARE=1` : ne demarre pas `wrangler dev` et skippe la suite
+  (a utiliser si l'environnement empeche d'executer `wrangler` localement).
+
+La suite est independante de la suite Vercel (`playwright.config.ts`) :
+`testDir`, port et serveur distincts ; `test:e2e:smoke` et `test:e2e:builder`
+ne sont pas affectes.
+
+### Tester en ligne (Worker deploye)
+
+Pour exercer les memes assertions contre un Worker reel (preview workers.dev) :
+
+1. Authentifier wrangler : `npx wrangler login` (ou definir `CLOUDFLARE_API_TOKEN`).
+2. Declarer le secret admin : `npx wrangler secret put ADMIN_TOKEN`
+   (et `GITHUB_TOKEN` si l'on veut couvrir `publish` vers GitHub).
+3. Deployer : `npm run deploy:cloudflare` -> renvoie l'URL
+   `https://givre-reyone-api.<compte>.workers.dev`.
+4. Lancer la suite contre cette URL, avec le meme token que le secret deploye :
+
+   ```bash
+   E2E_CLOUDFLARE_BASE_URL=https://givre-reyone-api.<compte>.workers.dev \
+   E2E_ADMIN_TOKEN=<meme-token-que-le-secret> \
+   npm run test:e2e:cloudflare
+   ```
+
+   En mode URL externe, `wrangler dev` n'est pas demarre ; les ecritures
+   `save-draft`/`upload` ciblent le KV/R2 reel du Worker (utiliser un
+   environnement preview, pas la production).
