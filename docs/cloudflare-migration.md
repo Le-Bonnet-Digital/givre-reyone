@@ -60,8 +60,11 @@ production) et exerce les routes admin de `worker.mjs` :
 
 Variables d'environnement utiles :
 
+- `E2E_CLOUDFLARE_BASE_URL` : si defini, la suite cible cette URL (Worker
+  deja deploye) et ne demarre PAS `wrangler dev` (voir "Tester en ligne").
 - `E2E_ADMIN_TOKEN` (ou `ADMIN_TOKEN`) : token admin injecte dans le Worker
-  via `--var` ; un defaut deterministe est utilise si absent.
+  via `--var` ; un defaut deterministe est utilise si absent. En mode URL
+  externe, il doit correspondre au secret `ADMIN_TOKEN` du Worker deploye.
 - `GITHUB_TOKEN` : optionnel ; active le test de round-trip Git `load`+`publish`.
 - `E2E_CLOUDFLARE_PORT` : port du `wrangler dev` local (defaut `8788`).
 - `E2E_SKIP_CLOUDFLARE=1` : ne demarre pas `wrangler dev` et skippe la suite
@@ -70,3 +73,24 @@ Variables d'environnement utiles :
 La suite est independante de la suite Vercel (`playwright.config.ts`) :
 `testDir`, port et serveur distincts ; `test:e2e:smoke` et `test:e2e:builder`
 ne sont pas affectes.
+
+### Tester en ligne (Worker deploye)
+
+Pour exercer les memes assertions contre un Worker reel (preview workers.dev) :
+
+1. Authentifier wrangler : `npx wrangler login` (ou definir `CLOUDFLARE_API_TOKEN`).
+2. Declarer le secret admin : `npx wrangler secret put ADMIN_TOKEN`
+   (et `GITHUB_TOKEN` si l'on veut couvrir `publish` vers GitHub).
+3. Deployer : `npm run deploy:cloudflare` -> renvoie l'URL
+   `https://givre-reyone-api.<compte>.workers.dev`.
+4. Lancer la suite contre cette URL, avec le meme token que le secret deploye :
+
+   ```bash
+   E2E_CLOUDFLARE_BASE_URL=https://givre-reyone-api.<compte>.workers.dev \
+   E2E_ADMIN_TOKEN=<meme-token-que-le-secret> \
+   npm run test:e2e:cloudflare
+   ```
+
+   En mode URL externe, `wrangler dev` n'est pas demarre ; les ecritures
+   `save-draft`/`upload` ciblent le KV/R2 reel du Worker (utiliser un
+   environnement preview, pas la production).

@@ -13,8 +13,12 @@ import { defineConfig } from "@playwright/test";
  * lieu de `vercel dev`. Les specs Vercel existantes ne sont pas affectees.
  *
  * Variables d'environnement :
+ * - E2E_CLOUDFLARE_BASE_URL : si defini, la suite cible cette URL (Worker
+ *   deja deploye, ex. preview workers.dev) et NE demarre PAS wrangler dev.
+ *   Permet de tester "en ligne" exactement les memes assertions qu'en local.
  * - E2E_ADMIN_TOKEN / ADMIN_TOKEN : token admin injecte dans le Worker
- *   (defaut deterministe ci-dessous si absent).
+ *   (defaut deterministe ci-dessous si absent). En mode URL externe, il doit
+ *   correspondre au secret ADMIN_TOKEN du Worker deploye.
  * - GITHUB_TOKEN : optionnel ; si present, transmis au Worker pour exercer
  *   le round-trip Git complet (load/publish). Sinon ces routes ne sont
  *   verifiees que sur leurs contrats d'auth/validation (deterministes).
@@ -23,7 +27,8 @@ import { defineConfig } from "@playwright/test";
  */
 
 const PORT = Number(process.env.E2E_CLOUDFLARE_PORT || 8788);
-const BASE_URL = `http://127.0.0.1:${PORT}`;
+const EXTERNAL_BASE_URL = process.env.E2E_CLOUDFLARE_BASE_URL?.trim().replace(/\/$/, "");
+const BASE_URL = EXTERNAL_BASE_URL || `http://127.0.0.1:${PORT}`;
 
 const ADMIN_TOKEN = (
   process.env.E2E_ADMIN_TOKEN ||
@@ -56,14 +61,16 @@ export default defineConfig({
     baseURL: BASE_URL,
     trace: "on-first-retry"
   },
-  webServer: skip
-    ? undefined
-    : {
-        command: `npx wrangler dev --port ${PORT} --ip 127.0.0.1 ${wranglerVars.join(" ")}`,
-        url: `${BASE_URL}/api/admin/ping`,
-        timeout: 120000,
-        reuseExistingServer: true
-      },
+  // Contre une URL externe (Worker deploye), on ne demarre pas de serveur local.
+  webServer:
+    skip || EXTERNAL_BASE_URL
+      ? undefined
+      : {
+          command: `npx wrangler dev --port ${PORT} --ip 127.0.0.1 ${wranglerVars.join(" ")}`,
+          url: `${BASE_URL}/api/admin/ping`,
+          timeout: 120000,
+          reuseExistingServer: true
+        },
   projects: [
     {
       name: "cloudflare-worker-api"

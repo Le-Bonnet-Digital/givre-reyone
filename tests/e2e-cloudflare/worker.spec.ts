@@ -105,7 +105,9 @@ test.describe("Cloudflare Worker — convergence admin/builder", () => {
     expect(res.status()).toBe(200);
     const body = await res.json();
     expect(body).toMatchObject({ ok: true, storage: "r2" });
-    expect(body.url).toMatch(/^r2:\/\/builder-assets\/\d+-logo_test\.png$/);
+    // Pointe vers R2 : `r2://...` (sans base publique) ou une URL publique
+    // `https://.../builder-assets/...` si R2_PUBLIC_BASE_URL est configure.
+    expect(body.url).toMatch(/^(r2:\/\/|https?:\/\/).*builder-assets\/\d+-logo_test\.png$/);
 
     const unauth = await request.post("/api/admin/assets/upload?filename=x.png", {
       headers: { "Content-Type": "image/png" },
